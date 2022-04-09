@@ -1,8 +1,6 @@
-**<u>The Witches of Zader-Klaus - ZKWitches</u>**
+The Witches of Zader-Klaus
 
- A social deduction game using ZK technology
-
-**<u>Players Summary of the Game:</u>**
+Players Summary of the Game:
 This is a dapp 4 player game turn based card game involving resource management and social deduction.
 Players ante up some $$$ at the start of the game. Winner takes all. 
 If a player takes too long on their turn, they can be kicked from the game by another player (they lose).
@@ -33,16 +31,15 @@ If they don't, the witch is driven from their town, and they must pay the inquis
 
 The game ends immediately when the winning player accumulates 10 food and 10 lumber, or all other players have lost. That player takes the ante. 
 
-**<u>Technical Summary of the Game:</u>** 
+Technical Summary of the Game
 This is a dapp game with no additional backend. 
 This game follows this basic flow:
-
 * Players join a game with pre-committed "hands" that they choose via a api call that also transfers $$$ into the contract. 
 * A circuit validates that "hand" is valid, and a proof is provided of this along with a commitment hash HASH(salt+hand). The player stores their hand and salt locally.
 * Once all players have joined, the game proceeds to the first player
 * Players call action apis when it is their turn. Out of turn calls are rejected. current turn is tracked by a state machine
 * On most actions, a player must provide a proof that they are capable of doing that action, either by having enough citizens of that type or having a witch. 
-* They need to provide their hand and a salt to a circuit, and prove that their hand has some property, and is the same as the previously committed hand.
+* They need to provide their hand and a salt to a circuit, and prove that their hand has some proprety, and is the same as the previously committed hand.
 * Some actions do not require proofs 
 * A player must respond to an witch accusation out of turn. They call an api that submit a proof that they do not have that witch, or call an API acknowledging that they do.
 * All Business logic is enforced in both contract AND UI client
@@ -50,20 +47,14 @@ This game follows this basic flow:
 * Players can surrender
 * Lost players automatically lose their turns
 
-**<u>Technologies Used:</u>** 
 
-* Solidity for contracts
-* Circom for circuits,
-* Unity WebGL 
-  * Because I have more experience with unity instead of normal frontend technologies
-
-**<u>Datatypes</u>**:
 
 * Public game data: CurrentGameStateEnum, PlayerExpectedToAct, last action block#, eliminatedPlayers[]
 * Public player data - on contract - isAlive, address, handCommitment, Food, Lumber, EliminatedWitches[]
 * Private player data - client side - Hand (citizen count + witch selection), Salt
 
-**<u>Hand Datatype:</u>** 
+Visual Summary of the game 
+
 
 FarmerCount 0-3
 LumberjackCount 0-3
@@ -75,11 +66,11 @@ Witch of the Woods bool
 Sneaky Witch bool
 Sanctimonious Witch bool
 
-**<u>Proofs/Circuits:</u>**
+Proofs/Circuits:
 
 *** Initial Setup
 Poseidon(IdCommitment + PackedCounts(...)) => Hash
-FarmerCount + LumberjackCount + BrigandCount + InquisitorCount + Witch+Witch+Witch+Witch == 7
+FarmerCount + LumberjackCount + BrigandCount + InquisitorCount + Witch+Witch+Witch+Witch == 5
 
 *** Action x>0
 Poseidon(IdCommitment + PackedCounts(...)) == Hash
@@ -89,39 +80,33 @@ xCount >= x || (Witch == 1 && Witch_Alive == 0)
 Poseidon(IdCommitment + PackedCounts(...)) == Hash
 Witch == 0 || Witch_Alive == 0
 
-**<u>Smart Contract Methods (Public API)*</u>**
 
-***Meta_Actions***
+Smart Contract Methods (Public API)
 
-Player_Register(proof , $$$)
+# Meta_Actions
+Player_Register()
 Surrender()
-Kick_Current_Player()
-
-***Zero_Actions (No Proofs)***
-
+Kick_Player()
+# Zero_Actions (No Proofs)
 Farm_0()
 Lumber_0()
-Steal_0(otherplayer)
+Steal_0()
 Accuse_0()
-
-***Non_Zero_Actions (Requires Proofs)***
-
+# Non_Zero_Actions
 Farm_1_3()
 Lumber_1_3()
 Steal_1_3()
 Accuse_1_3()
-
-***Respond to accusation***
-
+# Respond
 Respond_Proof()
 Respond_No_Proof()
 
-<u>**State Machine States**</u>
-Waiting_For_Players_To_Start
-Player_X_Turn(player)
-Player_X_Responding_To_Accusation(player)
+// State_Machine
+Waiting_For_Players()
+Player_X_Turn()
+Player_X_Responding_To_Accusation()
 
-
+// Guts
 
 
 
