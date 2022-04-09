@@ -1,8 +1,8 @@
-**<u>The Witches of Zader-Klaus - ZKWitches</u>**
+# The Witches of Zader-Klaus - ZKWitches
 
  A social deduction game using ZK technology
 
-**<u>Players Summary of the Game:</u>**
+## Player's Summary of the Game
 This is a dapp 4 player game turn based card game involving resource management and social deduction.
 Players ante up some $$$ at the start of the game. Winner takes all. 
 If a player takes too long on their turn, they can be kicked from the game by another player (they lose).
@@ -15,6 +15,7 @@ A player selects 6 total citizens, which are secret and never fully revealed (bu
 Players can use these citizens to gather resources, steal from other players and accuse enemies of witchcraft.
 
 Farmers can gather 1/2/3/4 food
+
 Lumberjacks can gather 1/2/3/4 lumber
 
 Brigands can either trade or steal
@@ -33,93 +34,97 @@ If they don't, the witch is driven from their town, and they must pay the inquis
 
 The game ends immediately when the winning player accumulates 10 food and 10 lumber, or all other players have lost. That player takes the ante. 
 
-**<u>Technical Summary of the Game:</u>** 
+## Technical Summary of the Game:
 This is a dapp game with no additional backend. 
 This game follows this basic flow:
 
 * Players join a game with pre-committed "hands" that they choose via a api call that also transfers $$$ into the contract. 
-* A circuit validates that "hand" is valid, and a proof is provided of this along with a commitment hash HASH(salt+hand). The player stores their hand and salt locally.
-* Once all players have joined, the game proceeds to the first player
-* Players call action apis when it is their turn. Out of turn calls are rejected. current turn is tracked by a state machine
+* **<u>A circuit validates that "hand" is valid, and a proof is provided of this along with a commitment hash HASH(salt+hand). The player stores their hand and salt locally.</u>**
+* **<u>Once all players have joined, the game proceeds to the first player</u>**
+* **<u>Players call action apis when it is their turn. Out of turn calls are rejected. current turn is tracked by a state machine</u>**
 * On most actions, a player must provide a proof that they are capable of doing that action, either by having enough citizens of that type or having a witch. 
-* They need to provide their hand and a salt to a circuit, and prove that their hand has some property, and is the same as the previously committed hand.
+* **<u>They need to provide their hand and a salt to a circuit, and prove that their hand has some property, and is the same as the previously committed hand.</u>**
 * Some actions do not require proofs 
-* A player must respond to an witch accusation out of turn. They call an api that submit a proof that they do not have that witch, or call an API acknowledging that they do.
-* All Business logic is enforced in both contract AND UI client
-* If it is a player's turn to act but X number of blocks have elapsed, any player may call the KICK() API and cause that player to lose
-* Players can surrender
-* Lost players automatically lose their turns
+* **<u>A player must respond to an witch accusation out of turn. They call an api that submit a proof that they do not have that witch, or call an API acknowledging that they do.</u>**
+* **<u>All Business logic is enforced in both contract AND UI client</u>**
+* **<u>If it is a player's turn to act but X number of blocks have elapsed, any player may call the KICK() API and cause that player to lose</u>**
+* **<u>Players can surrender</u>**
+* **<u>Lost players automatically lose their turns</u>**
 
-**<u>Technologies Used:</u>** 
+## Technologies Used: 
 
-* Solidity for contracts
-* Circom for circuits,
+* **<u>Solidity for contracts</u>**
+* **<u>Circom for circuits,</u>**
 * Unity WebGL 
-  * Because I have more experience with unity instead of normal frontend technologies
+  * **<u>Because I have more experience with unity instead of normal frontend technologies</u>**
 
-**<u>Datatypes</u>**:
+## Datatypes:
 
-* Public game data: CurrentGameStateEnum, PlayerExpectedToAct, last action block#, eliminatedPlayers[]
-* Public player data - on contract - isAlive, address, handCommitment, Food, Lumber, EliminatedWitches[]
-* Private player data - client side - Hand (citizen count + witch selection), Salt
+* **<u>Public game data: CurrentGameStateEnum, PlayerExpectedToAct, last action block#, eliminatedPlayers[]</u>**
+* **<u>Public player data - on contract - isAlive, address, handCommitment, Food, Lumber, EliminatedWitches[]</u>**
+* **<u>Private player data - client side - Hand (citizen count + witch selection), Salt</u>**
 
-**<u>Hand Datatype:</u>** 
+## Hand Datatype: 
 
 FarmerCount 0-3
 LumberjackCount 0-3
 BrigandCount 0-3
 InquisitorCount 0-3
 
-Witch of the Fields bool
-Witch of the Woods bool
-Sneaky Witch bool
-Sanctimonious Witch bool
+FarmerWitch bool
+LumberjackWitch bool
+BrigandWitch bool
+InquisitorWitch bool
 
-**<u>Proofs/Circuits:</u>**
+## Proofs/Circuits:
 
-*** Initial Setup
+### Initial Setup
+
 Poseidon(IdCommitment + PackedCounts(...)) => Hash
-FarmerCount + LumberjackCount + BrigandCount + InquisitorCount + Witch+Witch+Witch+Witch == 7
+FarmerCount + LumberjackCount + BrigandCount + InquisitorCount + Witch+Witch+Witch+Witch == 7**
 
-*** Action x>0
+### Action x>0
+
 Poseidon(IdCommitment + PackedCounts(...)) == Hash
-xCount >= x || (Witch == 1 && Witch_Alive == 0)
+xCount >= x || (Witch == 1 && Witch_Alive == 0)**
 
-*** No Witch
+### No Witch
+
 Poseidon(IdCommitment + PackedCounts(...)) == Hash
-Witch == 0 || Witch_Alive == 0
+Witch == 0 || Witch_Alive == 0**
 
-**<u>Smart Contract Methods (Public API)*</u>**
+## Smart Contract Methods (Public API)
 
-***Meta_Actions***
+### Meta_Actions
 
 Player_Register(proof , $$$)
 Surrender()
-Kick_Current_Player()
+KickCurrentPlayer()
 
-***Zero_Actions (No Proofs)***
+### Zero_Actions (No Proofs)
 
 Farm_0()
 Lumber_0()
 Steal_0(otherplayer)
-Accuse_0()
+Accuse_0(otherplayer)
 
-***Non_Zero_Actions (Requires Proofs)***
+### NonZeroActions (Requires Proofs)
 
-Farm_1_3()
-Lumber_1_3()
-Steal_1_3()
-Accuse_1_3()
+Farm_1_3(proof)
+Lumber_1_3(proof)
+Steal_1_3(proof, otherplayer)
+Accuse_1_3(proof, otherplayer)
 
-***Respond to accusation***
+### Respond to accusation
 
-Respond_Proof()
-Respond_No_Proof()
+Respond_Proof(proof)
+RespondNoProof()
 
-<u>**State Machine States**</u>
-Waiting_For_Players_To_Start
-Player_X_Turn(player)
-Player_X_Responding_To_Accusation(player)
+## State Machine States
+
+WaitingForPlayersToStart
+PlayerXTurn(player)
+PlayerXRespondingToAccusation(player)
 
 
 
