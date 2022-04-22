@@ -39,6 +39,24 @@ declare module "@mui/material/styles" {
     }
   }
 
+  declare module "@mui/material/Slider" {
+    interface SliderPropsColorOverrides {
+        food: true;
+        lumber: true;
+        brigand: true;
+        inquisitor: true;
+    }
+  }
+
+  declare module "@mui/material/Checkbox" {
+    interface CheckboxPropsColorOverrides {
+        food: true;
+        lumber: true;
+        brigand: true;
+        inquisitor: true;
+    }
+  }
+
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',

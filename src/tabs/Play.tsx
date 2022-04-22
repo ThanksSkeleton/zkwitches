@@ -5,25 +5,38 @@ import { BrigandTableau, FoodTableau, InquisitorTableau, LumberTableau } from ".
 import Stack from '@mui/material/Stack';
 import ResourceIndicator from "./components/ResourceIndicator";
 import TextField from "@mui/material/TextField";
+import Loading  from "./components/Loading";
 import { ActivePlayer, EnemyPlayer } from "./components/PlayerOutlines";
+import CitizenSelector from "./components/CitizenSelector";
+import { Divider } from "@mui/material";
 
 
-export default function Play() {
+export default function Play() 
+{
+  return (
+    <Stack direction="column" spacing={4}>
+      <CitizenSelector />
+    </Stack>
+  );
 
-  const [nameDisable, setNameDisable] = useState(true);
-  const [descDisable, setDescDisable] = useState(true);
-  const [imageDisable, setImageDisable] = useState(true);
+  // return (
+  //   <Stack direction="column" spacing={4}>
+  //     <ActivePlayer playerId={1} />
+  //     <Divider variant="middle" />
+  //     <EnemyPlayer playerId={2} />
+  //     <EnemyPlayer playerId={3} />
+  //     <EnemyPlayer playerId={4} />      
+  //   </Stack>
+  // );
+}
 
-  const mintToken = async (event: any) => {}
-
-  const mintToken2 = async (event: any, foo: number) => {}
-
+export function Sending() 
+{
   return (
     <Stack direction="column" spacing={1}>
-      <ActivePlayer playerId={1} />
-      <EnemyPlayer playerId={2} />
-      <EnemyPlayer playerId={3} />
-      <EnemyPlayer playerId={4} />      
+      <Loading text="Creating Proof" />
+      <Loading text="Sending Message" />
+      <Loading text="Waiting For Confirmation" />
     </Stack>
   );
 }

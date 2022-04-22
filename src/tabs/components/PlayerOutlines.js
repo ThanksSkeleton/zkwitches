@@ -15,7 +15,7 @@ export function ActivePlayer(props)
   return (
     <Stack direction="row"
     spacing = {1}>
-      <TextField label={"Player " + props.playerId + " (You)"} variant="outlined" />
+      <TextField label={"Player " + props.playerId + " (You)"} variant="outlined" InputProps={{ readOnly: true,}} />
       <ResourceIndicator food={1} lumber={2} />
       <FoodTableau />
       <LumberTableau />
@@ -28,7 +28,7 @@ export function EnemyPlayer(props)
   return (
     <Stack direction="row"
     spacing = {1}>
-      <TextField label={"Player " + props.playerId} variant="outlined" />
+      <TextField label={"Player " + props.playerId} variant="outlined" InputProps={{ readOnly: true,}} />
       <ResourceIndicator food={1} lumber={2} />
       <BrigandTableau />
       <InquisitorTableau />
