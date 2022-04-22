@@ -1,3 +1,5 @@
+export {}
+
 const FOOD = 0;
 const LUMBER = 1;
 const BRIGAND = 2;
@@ -13,49 +15,49 @@ enum GameStateEnum
 
 class TotalGameState 
 {
-    shared: SharedGameState
-    players: Map<string, PlayerGameState>
+    shared!: SharedGameState
+    players!: Map<string, PlayerGameState>
 }
 
 class SharedGameState 
 {
-    stateEnum : GameStateEnum
-    player_waiting: string
+    stateEnum!: GameStateEnum
+    player_waiting!: string
 
-    previous_action_game_block: number
-    current_block: number
+    previous_action_game_block!: number
+    current_block!: number
 
-    current_sequence_number: number
+    current_sequence_number!: number
 }
 
 class PlayerGameState 
 {    
-    slot: number
+    slot!: number
 
-    address: string
+    address!: string
 
-    is_alive: boolean
+    is_alive!: boolean
 
-    handcommitment: string
+    handcommitment!: string
 
-    food: number
-    lumber: number
+    food!: number
+    lumber!: number
 
-    dead_witches: number[]
+    dead_witches!: number[]
 }
 
 class PrivatePlayerInfo
 {
-    slot: number
+    slot!: number
 
-    address : string
+    address!: string
 
-    salt: string
+    salt!: string
 
-    citizens: number[]
-    witches: number[]
+    citizens!: number[]
+    witches!: number[]
 
-    my_last_action: number
+    my_last_action!: number
 }
 
 interface ActionValidator
@@ -87,10 +89,7 @@ function MyReponseValidator(gamestate: TotalGameState, private_player_info: Priv
 function HaveCitizensValidator(private_player_info: PrivatePlayerInfo, dead_witches: number[], citizen_type: number, count_required: number ) : boolean 
 {
     return (private_player_info.citizens[citizen_type] >= count_required || private_player_info.witches[citizen_type] == 1 && dead_witches[citizen_type] == 0)
-}
+} 
 
-function 
-
-
-let message: string = 'Hello World';
-console.log(message);
+let m: string = 'Hello World s';
+console.log(m);

@@ -4,9 +4,7 @@ import Tab from '@mui/material/Tab';
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box';
 import About from './tabs/About';
-import View from './tabs/View';
-import Mint from './tabs/Mint';
-import Verify from './tabs/Verify';
+import Play from './tabs/Play';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -59,24 +57,16 @@ export default function BasicTabs() {
         allowScrollButtonsMobile={true}
         aria-label="scrollable auto tabs example"
         >
-          <Tab label="zkPhoto" {...a11yProps(0)} disabled />
-          <Tab label="About" {...a11yProps(1)} />
-          <Tab label="Mint" {...a11yProps(2)} />
-          <Tab label="Verify" {...a11yProps(3)} />
-          <Tab label="View" {...a11yProps(4)} />
+          <Tab label="zkWitches" {...a11yProps(0)} disabled />
+          <Tab label="Play" {...a11yProps(1)} />
+          <Tab label="About" {...a11yProps(2)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={1}>
-        <Container><About /></Container>
+        <Container><Play /></Container>
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <Mint />
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        <Verify />
-      </TabPanel>
-      <TabPanel value={value} index={4}>
-        <View />
+        <About />
       </TabPanel>
     </Box>
   );
