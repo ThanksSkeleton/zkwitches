@@ -23,7 +23,7 @@ export default function Play() {
       <ActivePlayer playerId={1} />
       <EnemyPlayer playerId={2} />
       <EnemyPlayer playerId={3} />
-      <EnemyPlayer playerId={4} />
+      <EnemyPlayer playerId={4} />      
     </Stack>
   );
 }

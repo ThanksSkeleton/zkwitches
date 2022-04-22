@@ -42,7 +42,7 @@ declare module "@mui/material/styles" {
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',
-        food: palette.augmentColor({ color: { main: "#D4AF37"} }),
+        food: palette.augmentColor({ color: { main: "#F4AF37"} }),
         lumber: palette.augmentColor({ color: { main: "#228C22"}}),
         brigand: palette.augmentColor({ color: { main: "#56717D"}}),
         inquisitor: palette.augmentColor({ color: { main: "#8b0000"}})
