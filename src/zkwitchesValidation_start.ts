@@ -5,7 +5,7 @@ const LUMBER = 1;
 const BRIGAND = 2;
 const INQUISITOR = 3;
 
-enum GameStateEnum 
+export enum GameStateEnum 
 {
     GAME_STARTING,
     WAITING_FOR_PLAYER_TURN,
@@ -72,14 +72,14 @@ interface ActionValidator
 // StealValidator
 // InquisitionValidator
 
-function MyTurnValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) 
+function MyTurnValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) : boolean
 {
     return gamestate.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN &&
      gamestate.shared.player_waiting == private_player_info.address &&
      gamestate.shared.current_sequence_number == private_player_info.my_last_action;
 }
 
-function MyReponseValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) 
+function MyReponseValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) : boolean
 {
     return gamestate.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE &&
      gamestate.shared.player_waiting == private_player_info.address &&

@@ -1,8 +1,7 @@
 /* global BigInt */
 
-import { generateWitness } from './generate_witness';
 import { groth16 } from 'snarkjs';
-
+import wc from "./witness_calculator";
 
 function unstringifyBigInts(o) {
     if ((typeof(o) == "string") && (/^[0-9]+$/.test(o) ))  {
@@ -59,4 +58,16 @@ export async function generateCalldata(in_array) {
     const Input = argv.slice(8);
 
     return [a, b, c, Input];
+}
+
+async function generateWitness (input) {
+	const response = await fetch('zkPhoto.wasm');
+	const buffer = await response.arrayBuffer();
+	//console.log(buffer);
+	let buff;
+
+	await wc(buffer).then(async witnessCalculator => {
+		buff = await witnessCalculator.calculateWTNSBin(input, 0);
+	});
+	return buff;
 }
