@@ -13,6 +13,8 @@ interface IZKBackend
     RespondToAccusation(priv: PrivateUserData): Promise<void>;
     Surrender(): Promise<void>
     KickActivePlayer(): Promise<void>
+
+    DebugSetTotalGameState(tgs: TotalGameState) : Promise<void>
 }
 
 class EmptyZKBackend implements IZKBackend 
@@ -48,6 +50,12 @@ class EmptyZKBackend implements IZKBackend
 
     KickActivePlayer(): Promise<void> 
     {
+        return this.RefreshStatus();
+    }
+
+    DebugSetTotalGameState(tgsinput: TotalGameState): Promise<void> 
+    {
+        this.tgs = tgsinput;
         return this.RefreshStatus();
     }
 }
@@ -89,6 +97,10 @@ class MockZKBackend implements IZKBackend
     {
         return this.RefreshStatus();
     }
+
+    DebugSetTotalGameState(tgs: TotalGameState): Promise<void> {
+        return this.RefreshStatus();
+    }
 }
 
 // TODO
@@ -126,6 +138,10 @@ class ZKBackend implements IZKBackend
 
     KickActivePlayer(): Promise<void> 
     {
+        return this.RefreshStatus();
+    }
+
+    DebugSetTotalGameState(tgs_input: TotalGameState): Promise<void> {
         return this.RefreshStatus();
     }
 }

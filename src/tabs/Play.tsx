@@ -6,7 +6,7 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { GameStateEnum, PrivatePlayerInfo, TotalGameState } from "../zkwitchesValidation_start";
+// import { GameStateEnum, PrivatePlayerInfo, TotalGameState } from "../zkwitchesValidation_start";
 
 // CitizenSelector
 // WaitingOnOthersToJoin
@@ -483,4 +483,63 @@ type LoadingScreenProps = {}
 function LoadingScreen(props: LoadingScreenProps) 
 {
   return (<TextField label="Loading..." variant="outlined" InputProps={{ readOnly: true,}} />); 
+}
+
+// CLASSES 
+
+export enum GameStateEnum 
+{
+    GAME_STARTING,
+    WAITING_FOR_PLAYER_TURN,
+    WAITING_FOR_PLAYER_ACCUSATION_RESPONSE,
+    GAME_OVER
+}
+
+export class TotalGameState 
+{
+    shared!: SharedGameState
+    playerAddresses!: string[]
+    players!: PlayerGameState[]
+}
+
+export class SharedGameState 
+{
+    stateEnum!: GameStateEnum
+    playerSlotWaiting!: number
+
+    currentNumberOfPlayers!: number
+
+    playerAccusing!: number
+    accusationWitchType!: number
+
+    // TODO Tracking time for kick and UI state
+    previous_action_game_block!: number
+    current_block!: number
+
+    current_sequence_number!: number
+}
+
+export class PlayerGameState 
+{    
+    isAlive!: boolean
+    handCommitment!: string
+
+    food!: number
+    lumber!: number
+
+    WitchAlive!: number[]
+}
+
+export class PrivatePlayerInfo
+{
+    slot!: number
+
+    address!: string
+
+    salt!: string
+
+    citizens!: number[]
+    witches!: number[]
+
+    my_last_action!: number
 }

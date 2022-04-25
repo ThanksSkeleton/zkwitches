@@ -23,7 +23,7 @@ function unstringifyBigInts(o) {
     }
 }
 
-export async function generateCalldata(in_array) {
+export async function generateCalldata(wasmfile, zkeyPath, in_array) {
     const input = {
         "in": in_array
     }
@@ -32,7 +32,7 @@ export async function generateCalldata(in_array) {
 
     //console.log(generateWitness);
 
-    let witness = await generateWitness(input).then()
+    let witness = await generateWitness(wasmfile, input).then()
         .catch((error) => {
             console.error(error);
             generateWitnessSuccess = false;
@@ -42,7 +42,7 @@ export async function generateCalldata(in_array) {
 
     if (!generateWitnessSuccess) { return; }
 
-    const { proof, publicSignals } = await groth16.prove('circuit_final.zkey', witness);
+    const { proof, publicSignals } = await groth16.prove(zkeyPath, witness);
 
     const editedPublicSignals = unstringifyBigInts(publicSignals);
     const editedProof = unstringifyBigInts(proof);
@@ -60,8 +60,8 @@ export async function generateCalldata(in_array) {
     return [a, b, c, Input];
 }
 
-async function generateWitness (input) {
-	const response = await fetch('zkPhoto.wasm');
+async function generateWitness (wasmfile, input) {
+	const response = await fetch(wasmfile);
 	const buffer = await response.arrayBuffer();
 	//console.log(buffer);
 	let buff;
