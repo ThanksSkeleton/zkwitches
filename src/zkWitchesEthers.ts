@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 import address from './artifacts/address.json'
-import zkWitchesArtifact from './artifacts/zkWitchesArtifact.json'
+import zkWitchesArtifact from './artifacts/zkWitches.json'
 import { TotalGameState } from "./tabs/Play";
 
-import { generateCalldata } from './zkPhoto_js/generate_calldata'
+import { generateCalldata } from './zkWitches_js/generate_calldata'
 
 let zkWitches: ethers.Contract;
 
@@ -45,14 +45,14 @@ async function generateWitness(wasmfile: string, zkeyPath: string, inputData: an
     return { a, b, c, inputs };
 }
 
-const JoinWASM : string = "";
-const JoinZKey : string = "";
+const JoinWASM : string = "./public/HC/HandCommitment.wasm";
+const JoinZKey : string = "./public/HC/circuit_final.zkey";
 
-const ActionWASM : string = "";
-const ActionZKey : string = "";
+const ActionWASM : string = "./public/VM/ValidMove.wasm";
+const ActionZKey : string = "./public/VM/circuit_final.zkey";
 
-const NoWitchWASM : string = "";
-const NoWitchZkey: string = "";
+const NoWitchWASM : string = "./public/NW/NoWitch.wasm";
+const NoWitchZkey: string = "./public/NW/circuit_final.zkey";
 
 async function GetTgs() : Promise<TotalGameState> 
 {
