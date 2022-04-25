@@ -1,40 +1,12 @@
 import { useState } from "react";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from '@mui/material/Stack';
 import TextField from "@mui/material/TextField";
-import Loading  from "./components/Loading";
-import { ButtonGroup, Checkbox, Chip, Divider, PaletteColorOptions, Slider } from "@mui/material";
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import ButtonGroup from '@mui/material/ButtonGroup';
-import Button from "@mui/material/Button";
-import Stack from '@mui/material/Stack';
-import TextField from "@mui/material/TextField";
+import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
-import Divider from "@mui/material/Divider";
-import Checkbox from "@mui/material/Checkbox";
-
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import ButtonGroup from '@mui/material/ButtonGroup';
-
-import Stack from '@mui/material/Stack';
-import TextField from "@mui/material/TextField";
-
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
-
-
-
+import { GameStateEnum, PrivatePlayerInfo, TotalGameState } from "../zkwitchesValidation_start";
 
 // CitizenSelector
 // WaitingOnOthersToJoin
@@ -42,7 +14,7 @@ import Chip from '@mui/material/Chip';
 // MyResponse
 // OtherTurn
 // GameOver
-// Loading
+// LoadingScreen
 
 enum UIState 
 {
@@ -52,16 +24,45 @@ enum UIState
   MyResponse,
   OtherTurn,
   GameOver,
-  Loading,
+  LoadingScreen,
 }
 
-function GetUIState(tgs: TotalGameState, loading: boolean) : UIState
+function GetUIState(tgs: TotalGameState, myAddress: string, ppi: PrivatePlayerInfo, loading: boolean) : UIState
 {
   if (loading) 
   {
-    return UIState.Loading;
+    return UIState.LoadingScreen;
+  } 
+  else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING) 
+  {
+    if (tgs.playerAddresses.indexOf(myAddress) == -1) 
+    {
+      return UIState.CitizenSelector;
+    } else {
+      return UIState.WaitingOnOthersToJoin;
+    }
+  } 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN) 
+  {
+    if (tgs.shared.playerSlotWaiting == ppi.slot) 
+    {
+      return UIState.MyAction;
+    } else {
+      return UIState.OtherTurn;
+    }
+  } 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE) 
+  {
+    if (tgs.shared.playerSlotWaiting == ppi.slot) 
+    {
+      return UIState.MyResponse;
+    } else {
+      return UIState.OtherTurn;
+    }
+  } else if (tgs.shared.stateEnum == GameStateEnum.GAME_OVER) {
+    return UIState.GameOver;
   } else {
-    
+    throw("Unknown State");
   }
 }
 
@@ -73,42 +74,269 @@ function GetUIState(tgs: TotalGameState, loading: boolean) : UIState
 
 export default function Play() 
 {
+
+  let state : UIState = UIState.CitizenSelector;
+
   return (
     <Stack direction="column" spacing={4}>
-      <CitizenSelector />
+      {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector disabled={false} submit_action={new Promise(r => { setTimeout(r, 2000)})} />}
+      {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
+      {state as UIState === UIState.MyAction as UIState && <MyAction />}
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={new Promise(r => { setTimeout(r, 2000)})} response_description={""} />}
+      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
+      {state as UIState === UIState.GameOver as UIState && <GameOver />}
+      {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen />}
     </Stack>
   );
-
-  // return (
-  //   <Stack direction="column" spacing={4}>
-  //     <ActivePlayer playerId={1} />
-  //     <Divider variant="middle" />
-  //     <EnemyPlayer playerId={2} />
-  //     <EnemyPlayer playerId={3} />
-  //     <EnemyPlayer playerId={4} />      
-  //   </Stack>
-  // );
 }
 
-export function Sending() 
+// CITIZEN SELECTOR
+
+type CitizenSelectorProps = 
+{
+  disabled: boolean;
+  submit_action: Promise<void>;
+}
+
+function CitizenSelector(props: CitizenSelectorProps) 
 {
   return (
-    <Stack direction="column" spacing={1}>
-      <Loading text="Creating Proof" />
-      <Loading text="Sending Message" />
-      <Loading text="Waiting For Confirmation" />
+      <Stack direction="column" spacing = {1}>
+          <TypeSelector color="food" type="Farmer" />
+          <TypeSelector color="lumber" type="Lumberjack" />
+          <TypeSelector color="brigand" type="Brigand" />
+          <TypeSelector color="inquisitor" type="Inquisitor" />
+          <Divider variant="middle" />
+          <CompleteMeter action={props.submit_action} disabled={props.disabled} />
+      </Stack>
+  );
+}
+
+
+function valueText(value : number, index: number) 
+{   
+  return `${value}`;
+}
+
+type CompleteMeterProps =
+{
+    disabled: boolean;
+    action: Promise<void>;
+}
+
+function CompleteMeter(props: CompleteMeterProps) 
+{
+  return (
+      <Stack direction="row"
+      spacing = {1}>            
+          <Slider
+              aria-label="Total Meter"
+              defaultValue={0}
+              getAriaValueText={valueText}
+              valueLabelDisplay="auto"
+              step={1}
+              marks
+              min={0}
+              max={7}
+              disabled 
+          />
+          <Button
+              onClick={() => props.action}
+              disabled={props.disabled}>
+              Submit
+          </Button>
+      </Stack>
+  );
+}
+
+type TypeSelectorProps =
+{
+  color : string; // TODO Doesnt WORK
+  type: string;
+}
+
+function TypeSelector(props: TypeSelectorProps) {
+  return (
+      <Stack direction="row"
+      spacing = {1}>
+          <TextField label={props.type} variant="outlined" InputProps={{ readOnly: true,}} />
+          <Slider
+          aria-label={props.type + " Selector"}
+          defaultValue={0}
+          getAriaValueText={valueText}
+          valueLabelDisplay="auto"
+          step={1}
+          marks
+          min={0}
+          max={3}
+          // color={props.color} TODO FIX
+          />
+          <Checkbox 
+          // color={props.color} TODO FIX
+          // label="Witch"
+          // labelPlacement="top"
+          />
+      </Stack>
+  );
+}
+
+// END CITIZEN SELECTOR
+
+// WaitingOnOthersToJoin
+
+type WaitingOnOthersToJoin = {} 
+
+function WaitingOnOthersToJoin(props: WaitingOnOthersToJoin) 
+{
+  return (
+    <Stack direction="column">
+      <TextField label="Waiting on other players..." variant="outlined" InputProps={{ readOnly: true,}} /> // TODO IMPROVE
     </Stack>
   );
 }
 
-type TableauProps =
+// MYACTION
+
+type MyActionProps = {}
+
+function MyAction(props: MyActionProps) {
+  return (
+    <Stack direction="column" spacing={4}>
+      <ActivePlayer playerId={1} resourceIndicatorProps={{
+        food: 0,
+        lumber: 0
+      }} farmerProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} lumberjackProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} />
+      <Divider variant="middle" />
+      <EnemyPlayer playerId={2} resourceIndicatorProps={{
+        food: 0,
+        lumber: 0
+      }} brigandProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} inquisitorProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} />
+      <EnemyPlayer playerId={3} resourceIndicatorProps={{
+        food: 0,
+        lumber: 0
+      }} brigandProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} inquisitorProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} />
+      <EnemyPlayer playerId={4} resourceIndicatorProps={{
+        food: 0,
+        lumber: 0
+      }} brigandProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} inquisitorProps={{
+        color: "",
+        type: "",
+        action_enabled: [],
+        action_description: [],
+        action: []
+      }} />      
+    </Stack>
+  );
+}
+
+type ActivePlayerProps = 
 {
-  color: string; // TODO Doesnt WORK
-  type: string;
-  
-  action_enabled : boolean[];
-  action_description : string[];
-  action : Promise<void>[];
+  playerId: number;
+
+  resourceIndicatorProps : ResourceIndicatorProps,
+
+  farmerProps : TableauProps,
+  lumberjackProps: TableauProps,
+}
+
+function ActivePlayer(props: ActivePlayerProps)
+{
+  return (
+    <Stack direction="row"
+    spacing = {1}>
+      <TextField label={"Player " + props.playerId + " (You)"} variant="outlined" InputProps={{ readOnly: true,}} />
+      <ResourceIndicator food={props.resourceIndicatorProps.food} lumber={props.resourceIndicatorProps.lumber} />
+      <ActionTableau color={""} type={""} action_enabled={[]} action_description={[]} action={[]} />
+      <ActionTableau color={""} type={""} action_enabled={[]} action_description={[]} action={[]} />
+    </Stack>
+  )
+}
+
+type EnemyPlayerProps = 
+{
+  playerId: number;
+
+  resourceIndicatorProps : ResourceIndicatorProps,
+
+  brigandProps : TableauProps,
+  inquisitorProps: TableauProps,
+}
+
+function EnemyPlayer(props: EnemyPlayerProps)
+{
+  return (
+    <Stack direction="row"
+    spacing = {1}>
+      <TextField label={"Player " + props.playerId} variant="outlined" InputProps={{ readOnly: true,}} />
+      <ResourceIndicator food={props.resourceIndicatorProps.food} lumber={props.resourceIndicatorProps.lumber} />
+      <ActionTableau color={""} type={""} action_enabled={[]} action_description={[]} action={[]} />
+      <ActionTableau color={""} type={""} action_enabled={[]} action_description={[]} action={[]} />
+    </Stack>
+  )
+}
+
+type ResourceIndicatorProps = 
+{
+  food: number;
+  lumber: number;
+}
+
+function ResourceIndicator(props: ResourceIndicatorProps) {
+  return (
+      <Stack direction="column"
+      spacing = {1}>
+        <Chip
+        label={"food " + props.food}
+        color="food"
+        / >
+        <Chip
+        label={"lumber " + props.lumber}
+        color="lumber"
+        / >
+      </Stack>
+  );
 }
 
 // function LumberTableau(props_outer) 
@@ -163,6 +391,16 @@ type TableauProps =
 //     )
 // }
 
+type TableauProps =
+{
+  color: string; // TODO Doesnt WORK
+  type: string;
+  
+  action_enabled : boolean[];
+  action_description : string[];
+  action : Promise<void>[];
+}
+
 function ActionTableau(props: TableauProps) {
     return (
         <ButtonGroup
@@ -196,157 +434,53 @@ function ActionTableau(props: TableauProps) {
     );
 }
 
-type TypeSelectorProps =
+// END MYACTION
+
+// MyResponse
+type MyResponseProps = 
 {
-  color : string; // TODO Doesnt WORK
-  type: string;
+  action: Promise<void>
+  response_description: string
 }
 
-function TypeSelector(props: TypeSelectorProps) {
-  return (
-      <Stack direction="row"
-      spacing = {1}>
-          <TextField label={props.type} variant="outlined" InputProps={{ readOnly: true,}} />
-          <Slider
-          aria-label={props.type + " Selector"}
-          defaultValue={0}
-          getAriaValueText={valueText}
-          valueLabelDisplay="auto"
-          step={1}
-          marks
-          min={0}
-          max={3}
-          // color={props.color} TODO FIX
-          />
-          <Checkbox 
-          // color={props.color} TODO FIX
-          // label="Witch"
-          // labelPlacement="top"
-          />
-      </Stack>
-  );
-}
-
-function valueText(value : number, index: number) 
-{   
-  return `${value}`;
-}
-
-type CompleteMeterProps =
-{
-    disabled: boolean;
-    action: Promise<void>;
-}
-
-function CompleteMeter(props: CompleteMeterProps) 
+function MyResponse(props: MyResponseProps) 
 {
   return (
-      <Stack direction="row"
-      spacing = {1}>            
-          <Slider
-              aria-label="Total Meter"
-              defaultValue={0}
-              getAriaValueText={valueText}
-              valueLabelDisplay="auto"
-              step={1}
-              marks
-              min={0}
-              max={7}
-              disabled 
-          />
-          <Button
-              onClick={() => props.action}
-              disabled={props.disabled}>
-              Submit
-          </Button>
-      </Stack>
-  );
+    <Button
+    onClick={() => props.action}
+    >
+    {props.response_description}
+    </Button>
+);
 }
 
-type CitizenSelectorProps = 
+// END MyResponse
+
+// OtherTurn
+
+type OtherTurnProps = {}
+
+function OtherTurn(props: OtherTurnProps) 
 {
-  disabled: boolean;
-  submit_action: Promise<void>;
+  return (<TextField label="Other Player's Turn." variant="outlined" InputProps={{ readOnly: true,}} />);
 }
 
-function CitizenSelector(props: CitizenSelectorProps) 
+// GAMEOVER
+
+type GameOverProps = {}
+
+function GameOver(props: GameOverProps) 
 {
-  return (
-      <Stack direction="column" spacing = {1}>
-          <TypeSelector color="food" type="Farmer" />
-          <TypeSelector color="lumber" type="Lumberjack" />
-          <TypeSelector color="brigand" type="Brigand" />
-          <TypeSelector color="inquisitor" type="Inquisitor" />
-          <Divider variant="middle" />
-          <CompleteMeter action={props.submit_action} disabled={props.disabled} />
-      </Stack>
-  );
+  return (<TextField label="Game Over!" variant="outlined" InputProps={{ readOnly: true,}} />);
 }
 
-type ActivePlayerProps = 
+// END GAMEOVER
+
+// LOADINGSCREEN
+
+type LoadingScreenProps = {}
+
+function LoadingScreen(props: LoadingScreenProps) 
 {
-  playerId: number;
-
-  resourceIndicatorProps : ResourceIndicatorProps,
-
-  farmerProps : TableauProps,
-  lumberjackProps: TableauProps,
-}
-
-function ActivePlayer(props: ActivePlayerProps)
-{
-  return (
-    <Stack direction="row"
-    spacing = {1}>
-      <TextField label={"Player " + props.playerId + " (You)"} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.resourceIndicatorProps.food} lumber={props.resourceIndicatorProps.lumber} />
-      <ActionTableau />
-      <LumberTableau />
-    </Stack>
-  )
-}
-
-type EnemyPlayerProps = 
-{
-  playerId: number;
-
-  resourceIndicatorProps : ResourceIndicatorProps,
-
-  farmerProps : TableauProps,
-  lumberjackProps: TableauProps,
-}
-
-function EnemyPlayer(props: EnemyPlayerProps)
-{
-  return (
-    <Stack direction="row"
-    spacing = {1}>
-      <TextField label={"Player " + props.playerId} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.resourceIndicatorProps.food} lumber={props.resourceIndicatorProps.lumber} />
-      <BrigandTableau />
-      <InquisitorTableau />
-    </Stack>
-  )
-}
-
-type ResourceIndicatorProps = 
-{
-  food: number;
-  lumber: number;
-}
-
-function ResourceIndicator(props: ResourceIndicatorProps) {
-  return (
-      <Stack direction="column"
-      spacing = {1}>
-        <Chip
-        label={"food " + props.food}
-        color="food"
-        / >
-        <Chip
-        label={"lumber " + props.lumber}
-        color="lumber"
-        / >
-      </Stack>
-  );
+  return (<TextField label="Loading..." variant="outlined" InputProps={{ readOnly: true,}} />); 
 }

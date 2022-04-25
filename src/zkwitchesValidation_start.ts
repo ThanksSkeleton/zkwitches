@@ -13,40 +13,42 @@ export enum GameStateEnum
     GAME_OVER
 }
 
-class TotalGameState 
+export class TotalGameState 
 {
     shared!: SharedGameState
-    players!: Map<string, PlayerGameState>
+    playerAddresses!: string[]
+    players!: PlayerGameState[]
 }
 
-class SharedGameState 
+export class SharedGameState 
 {
     stateEnum!: GameStateEnum
-    player_waiting!: string
+    playerSlotWaiting!: number
 
+    currentNumberOfPlayers!: number
+
+    playerAccusing!: number
+    accusationWitchType!: number
+
+    // TODO Tracking time for kick and UI state
     previous_action_game_block!: number
     current_block!: number
 
     current_sequence_number!: number
 }
 
-class PlayerGameState 
+export class PlayerGameState 
 {    
-    slot!: number
-
-    address!: string
-
-    is_alive!: boolean
-
-    handcommitment!: string
+    isAlive!: boolean
+    handCommitment!: string
 
     food!: number
     lumber!: number
 
-    dead_witches!: number[]
+    WitchAlive!: number[]
 }
 
-class PrivatePlayerInfo
+export class PrivatePlayerInfo
 {
     slot!: number
 
@@ -75,20 +77,18 @@ interface ActionValidator
 function MyTurnValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) : boolean
 {
     return gamestate.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN &&
-     gamestate.shared.player_waiting == private_player_info.address &&
-     gamestate.shared.current_sequence_number == private_player_info.my_last_action;
+     gamestate.shared.playerSlotWaiting == private_player_info.slot
 }
 
 function MyReponseValidator(gamestate: TotalGameState, private_player_info: PrivatePlayerInfo) : boolean
 {
     return gamestate.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE &&
-     gamestate.shared.player_waiting == private_player_info.address &&
-     gamestate.shared.current_sequence_number == private_player_info.my_last_action;
+     gamestate.shared.playerSlotWaiting == private_player_info.slot
 }
 
 function HaveCitizensValidator(private_player_info: PrivatePlayerInfo, dead_witches: number[], citizen_type: number, count_required: number ) : boolean 
 {
-    return (private_player_info.citizens[citizen_type] >= count_required || private_player_info.witches[citizen_type] == 1 && dead_witches[citizen_type] == 0)
+    return (private_player_info.citizens[citizen_type] >= count_required || (private_player_info.witches[citizen_type] == 1 && dead_witches[citizen_type] == 0))
 } 
 
 let m: string = 'Hello World s';
