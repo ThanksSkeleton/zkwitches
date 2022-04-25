@@ -6,19 +6,3 @@ import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 
 
-export default function ResourceIndicator(props) {
-    return (
-        <Stack direction="column"
-        spacing = {1}>
-          <Chip
-          label={"food " + props.food}
-          color="food"
-          / >
-          <Chip
-          label={"lumber " + props.lumber}
-          color="lumber"
-          / >
-        </Stack>
-    );
-}
-

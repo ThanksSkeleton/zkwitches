@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
-import address from './artifacts/address.json'
-import zkWitchesArtifact from './artifacts/zkWitches.json'
-import { TotalGameState } from "./tabs/Play";
+import address from './artifacts/address.json';
+import zkWitchesArtifact from './artifacts/zkWitches.json';
+
+import { PlayerGameState, TotalGameState } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata'
 
@@ -80,7 +81,7 @@ async function GetTgs() : Promise<TotalGameState>
     return tgs;
 }
 
-async function joinGame(priv: PrivateUserData) : Promise<void>
+async function joinGame(priv: PlayerGameState) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(JoinWASM, JoinZKey, priv);
@@ -106,7 +107,7 @@ async function joinGame(priv: PrivateUserData) : Promise<void>
     }
 }
 
-async function Action(tgs: TotalGameState, priv: PrivateUserData) : Promise<void>
+async function Action(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
 {
     let isComplex : boolean = false;
 
@@ -120,7 +121,7 @@ async function Action(tgs: TotalGameState, priv: PrivateUserData) : Promise<void
     }
 }
 
-async function Action_Complex(tgs: TotalGameState, priv: PrivateUserData) : Promise<void>
+async function Action_Complex(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(ActionWASM, ActionZKey, priv);
@@ -146,7 +147,7 @@ async function Action_Complex(tgs: TotalGameState, priv: PrivateUserData) : Prom
     }
 }
 
-async function Action_Simple(tgs: TotalGameState, priv: PrivateUserData) : Promise<void>
+async function Action_Simple(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
 {
     await connectContract();
 
@@ -172,7 +173,7 @@ async function Action_Simple(tgs: TotalGameState, priv: PrivateUserData) : Promi
     }
 }
 
-async function WitchProof(priv: PrivateUserData) : Promise<void> 
+async function WitchProof(priv: PlayerGameState) : Promise<void> 
 {
     let isComplex : boolean = false;
 
@@ -186,7 +187,7 @@ async function WitchProof(priv: PrivateUserData) : Promise<void>
     }
 }
 
-async function WitchProof_No(priv: PrivateUserData) : Promise<void>
+async function WitchProof_No(priv: PlayerGameState) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(NoWitchWASM, NoWitchZkey, priv);
@@ -212,7 +213,7 @@ async function WitchProof_No(priv: PrivateUserData) : Promise<void>
     }
 }
 
-async function WitchProof_Yes(priv: PrivateUserData) : Promise<void>
+async function WitchProof_Yes(priv: PlayerGameState) : Promise<void>
 {
     await connectContract();
     let errorMsg;
