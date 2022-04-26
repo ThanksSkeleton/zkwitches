@@ -8,56 +8,83 @@ export enum GameStateEnum
     GAME_OVER
 }
 
-export class TotalGameState 
+export type TotalGameState =
 {
-    shared!: SharedGameState
-    playerAddresses!: string[]
-    players!: PlayerGameState[]
+    shared: SharedGameState,
+    playerAddresses: string[],
+    players: PlayerGameState[]
 }
 
-export class SharedGameState 
+export function DefaultTGS() : TotalGameState
 {
-    stateEnum!: GameStateEnum
-    playerSlotWaiting!: number
+    return <TotalGameState>
+    {
+        shared :
+        {
+            stateEnum: GameStateEnum.GAME_STARTING,
+            playerSlotWaiting: 0,
+            currentNumberOfPlayers: 0,
+            playerAccusing: 0,
+            accusationWitchType: 0,
+        },
+        playerAddresses: [],
+        players: []
+    };
+}
 
-    currentNumberOfPlayers!: number
+export type SharedGameState = 
+{
+    stateEnum: GameStateEnum
+    playerSlotWaiting: number
 
-    playerAccusing!: number
-    accusationWitchType!: number
+    currentNumberOfPlayers: number
+
+    playerAccusing: number
+    accusationWitchType: number
 
     // TODO Tracking time for kick and UI state
-    previous_action_game_block!: number
-    current_block!: number
+    previous_action_game_block?: number
+    current_block?: number
 
-    current_sequence_number!: number
+    current_sequence_number?: number
 }
 
-export class PlayerGameState 
+export type PlayerGameState =
 {    
-    isAlive!: boolean
-    handCommitment!: string
+    isAlive: boolean
+    handCommitment: string
 
-    food!: number
-    lumber!: number
+    food: number
+    lumber: number
 
-    WitchAlive!: number[]
+    WitchAlive: number[]
 }
 
-export class PrivatePlayerInfo
+export type PrivatePlayerInfo =
 {
-    slot!: number
+    slot: number
 
-    address!: string
+    address: string
 
-    salt!: string
+    salt: string
 
-    citizens!: number[]
-    witches!: number[]
-
-    my_last_action!: number
+    citizens: number[]
+    witches: number[]
 }
 
-export class ActionInfo {}
+export function DefaultPPI() : PrivatePlayerInfo 
+{
+    return <PrivatePlayerInfo> 
+    {
+        slot: 0,
+        address: "Random",
+        salt: "Random",
+        citizens: [0, 1, 2, 3],
+        witches: [0, 1, 0, 0]
+    }
+}
+
+export type ActionInfo = {}
 
 export interface IZKBackend 
 {
@@ -74,7 +101,7 @@ export interface IZKBackend
 
 export class EmptyZKBackend implements IZKBackend 
 {
-    private tgs: TotalGameState = new TotalGameState();
+    private tgs: TotalGameState = DefaultTGS();
 
     GetTotalGameState(): TotalGameState 
     {

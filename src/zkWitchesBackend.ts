@@ -1,10 +1,10 @@
-import { ActionInfo, IZKBackend, PrivatePlayerInfo, TotalGameState } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PrivatePlayerInfo, TotalGameState } from "./zkWitchesTypes";
 
 // TODO
 
 export class MockZKBackend implements IZKBackend 
 {
-    private tgs: TotalGameState = new TotalGameState();
+    private tgs: TotalGameState = DefaultTGS();
 
     GetTotalGameState(): TotalGameState 
     {
@@ -47,7 +47,7 @@ export class MockZKBackend implements IZKBackend
 
 export class ZKBackend implements IZKBackend 
 {
-    private tgs: TotalGameState = new TotalGameState();
+    private tgs: TotalGameState = DefaultTGS();
 
     GetTotalGameState(): TotalGameState 
     {

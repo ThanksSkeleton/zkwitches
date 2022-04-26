@@ -2,9 +2,9 @@ import { ethers } from "ethers";
 import address from './artifacts/address.json';
 import zkWitchesArtifact from './artifacts/zkWitches.json';
 
-import { PlayerGameState, TotalGameState } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, TotalGameState } from "./zkWitchesTypes";
 
-import { generateCalldata } from './zkWitches_js/generate_calldata'
+import { generateCalldata } from './zkWitches_js/generate_calldata';
 
 let zkWitches: ethers.Contract;
 
@@ -81,7 +81,7 @@ async function GetTgs() : Promise<TotalGameState>
     return tgs;
 }
 
-async function joinGame(priv: PlayerGameState) : Promise<void>
+async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(JoinWASM, JoinZKey, priv);
@@ -107,21 +107,21 @@ async function joinGame(priv: PlayerGameState) : Promise<void>
     }
 }
 
-async function Action(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
+async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
 {
     let isComplex : boolean = false;
 
     if (isComplex) 
     {
-        return Action_Complex(tgs, priv);
+        return Action_Complex(tgs, priv, actionInfo);
     } 
     else 
     {
-        return Action_Simple(tgs, priv);
+        return Action_Simple(tgs, priv, actionInfo);
     }
 }
 
-async function Action_Complex(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
+async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(ActionWASM, ActionZKey, priv);
@@ -147,7 +147,7 @@ async function Action_Complex(tgs: TotalGameState, priv: PlayerGameState) : Prom
     }
 }
 
-async function Action_Simple(tgs: TotalGameState, priv: PlayerGameState) : Promise<void>
+async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
 {
     await connectContract();
 
@@ -173,7 +173,7 @@ async function Action_Simple(tgs: TotalGameState, priv: PlayerGameState) : Promi
     }
 }
 
-async function WitchProof(priv: PlayerGameState) : Promise<void> 
+async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void> 
 {
     let isComplex : boolean = false;
 
@@ -187,7 +187,7 @@ async function WitchProof(priv: PlayerGameState) : Promise<void>
     }
 }
 
-async function WitchProof_No(priv: PlayerGameState) : Promise<void>
+async function WitchProof_No(priv: PrivatePlayerInfo) : Promise<void>
 {
     await connectContract();
     let witness = await generateWitness(NoWitchWASM, NoWitchZkey, priv);
@@ -213,7 +213,7 @@ async function WitchProof_No(priv: PlayerGameState) : Promise<void>
     }
 }
 
-async function WitchProof_Yes(priv: PlayerGameState) : Promise<void>
+async function WitchProof_Yes(priv: PrivatePlayerInfo) : Promise<void>
 {
     await connectContract();
     let errorMsg;
@@ -235,5 +235,131 @@ async function WitchProof_Yes(priv: PlayerGameState) : Promise<void>
     if (errorMsg) {
         //console.log("error: ", errorMsg);
         throw errorMsg;
+    }
+}
+
+async function Surrender() : Promise<void>
+{
+    await connectContract();
+    let errorMsg;
+
+    let txn = await zkWitches.Surrender() // TODO Review
+        .catch((error: any) => {
+            console.log(error);
+            if (error.reason) {
+                errorMsg = error.reason;
+            } else if (error.data.message) {
+                errorMsg = error.data.message;
+            } else {
+                errorMsg = "Unknown error."
+            }
+        });
+
+    console.log("transaction: ", txn);
+
+    if (errorMsg) {
+        //console.log("error: ", errorMsg);
+        throw errorMsg;
+    }
+}
+
+async function KickActivePlayer() : Promise<void>
+{
+    await connectContract();
+    let errorMsg;
+
+    let txn = await zkWitches.KickActivePlayer() // TODO Review
+        .catch((error: any) => {
+            console.log(error);
+            if (error.reason) {
+                errorMsg = error.reason;
+            } else if (error.data.message) {
+                errorMsg = error.data.message;
+            } else {
+                errorMsg = "Unknown error."
+            }
+        });
+
+    console.log("transaction: ", txn);
+
+    if (errorMsg) {
+        //console.log("error: ", errorMsg);
+        throw errorMsg;
+    }
+}
+
+async function SetTgs(new_tgs: TotalGameState) : Promise<void>
+{
+    await connectContract();
+    let errorMsg;
+
+    let txn = await zkWitches.SetTgs(new_tgs) // TODO Review
+        .catch((error: any) => {
+            console.log(error);
+            if (error.reason) {
+                errorMsg = error.reason;
+            } else if (error.data.message) {
+                errorMsg = error.data.message;
+            } else {
+                errorMsg = "Unknown error."
+            }
+        });
+
+    console.log("transaction: ", txn);
+
+    if (errorMsg) {
+        //console.log("error: ", errorMsg);
+        throw errorMsg;
+    }
+}
+
+export class ZKBackend implements IZKBackend 
+{
+    private tgs: TotalGameState = DefaultTGS();
+
+    GetTotalGameState(): TotalGameState 
+    {
+        return this.tgs;
+    }
+
+    async RefreshStatus(): Promise<void> 
+    {
+        this.tgs = await GetTgs();
+    }
+
+    async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
+    {
+        await JoinGame(priv);
+        await this.RefreshStatus();
+    }
+
+    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo): Promise<void> 
+    {
+        await Action(this.tgs, priv, action);
+        await this.RefreshStatus();
+    }
+
+    async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
+    {
+        await WitchProof(this.tgs, priv);
+        await this.RefreshStatus();    
+    }
+
+    async Surrender(): Promise<void> 
+    {
+        await Surrender();
+        await this.RefreshStatus();
+    }
+
+    async KickActivePlayer(): Promise<void> 
+    {
+        await KickActivePlayer();
+        await this.RefreshStatus();
+    }
+
+    async DebugSetTotalGameState(tgs_input: TotalGameState): Promise<void> 
+    {
+        await SetTgs(tgs_input);
+        await this.RefreshStatus();
     }
 }
