@@ -4,35 +4,42 @@ import { useEffect, useState } from 'react';
 
 const harmonyChain = 
 {
-  chainId:'0x6357d2e0',
-  chainName: 'Harmony Testnet',
-  nativeCurrency: {
-    name: 'ONE',
-    symbol: 'ONE',
-    decimals: 18
+  connection: 
+  {
+    chainId:'0x6357d2e0',
+    chainName: 'Harmony Testnet',
+    nativeCurrency: {
+      name: 'ONE',
+      symbol: 'ONE',
+      decimals: 18
+    },
+    rpcUrls: ['https://api.s0.b.hmny.io'],
+    blockExplorerUrls: ['https://explorer.pops.one']
   },
-  rpcUrls: ['https://api.s0.b.hmny.io'],
-  blockExplorerUrls: ['https://explorer.pops.one']
+  address: "0xa72325a1ad4b9145335aeb2fcba6ea6e2bbd85e0a32e155e489043b7fb737a96" // TODO FIX
 };
 
 const localhost = 
 {
-  chainId:'1337',
-  chainName: 'Localhost',
-  nativeCurrency: {
-    name: 'ETH',
-    symbol: 'ETH',
-    decimals: 18
+  connection: 
+  {
+    chainId:'0x539', // 1337
+    chainName: 'Localhost',
+    nativeCurrency: {
+      name: 'ETH',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    rpcUrls: ['http://localhost:8545'],
+    blockExplorerUrls: []
   },
-  rpcUrls: ['http://localhost:8545'],
-  blockExplorerUrls: []
+  address: "0xa72325a1ad4b9145335aeb2fcba6ea6e2bbd85e0a32e155e489043b7fb737a96"
 }
 
+export function targetChain(){ return localhost; }
 
 export default function WalletConnector() {
   const { ethereum } = window;
-
-  let targetChain = localhost;
 
   if (!ethereum) {
     alert("Make sure you have Metamask installed!");
@@ -76,18 +83,18 @@ export default function WalletConnector() {
     let chainId = await ethereum.request({ method: 'eth_chainId' });
     console.log("Chain ID:", chainId, parseInt(chainId));
 
-    setCorrectChain(chainId === targetChain.chainId);
+    setCorrectChain(chainId === targetChain().connection.chainId);
   }
 
   const changeChainId = async () => {
     let chainId = await ethereum.request({ method: 'eth_chainId' });
 
-    if (chainId !== targetChain.chainId) {
+    if (chainId !== targetChain().connection.chainId) {
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{
-            chainId: targetChain.chainId
+            chainId: targetChain().connection.chainId
           }], // chainId must be in hexadecimal numbers
         });
         chainId = await ethereum.request({ method: 'eth_chainId' });
@@ -108,7 +115,7 @@ export default function WalletConnector() {
       }
       window.location.reload();
     }
-    setCorrectChain(chainId === targetChain.chainId);
+    setCorrectChain(chainId === targetChain().connection.chainId);
   }
 
   const changeAccount = async () => {

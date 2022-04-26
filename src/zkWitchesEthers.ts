@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
-import address from './artifacts/address.json';
 import zkWitchesArtifact from './artifacts/zkWitches.json';
 
 import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, TotalGameState } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
+import targetChain from "./WalletConnector";
 
 let zkWitches: ethers.Contract;
 
@@ -15,7 +15,7 @@ async function connectContract() {
     let signer = provider.getSigner();
     console.log('signer: ', await signer.getAddress());
 
-    zkWitches = new ethers.Contract(address['zkWitches'], zkWitchesArtifact.abi, signer);
+    zkWitches = new ethers.Contract(targetChain().props['address'], zkWitchesArtifact.abi, signer);
 
     console.log("Connect to zkWitches Contract:", zkWitches);
 }
@@ -313,6 +313,8 @@ async function SetTgs(new_tgs: TotalGameState) : Promise<void>
 
 export class ZKBackend implements IZKBackend 
 {
+    
+
     private tgs: TotalGameState = DefaultTGS();
 
     GetTotalGameState(): TotalGameState 
