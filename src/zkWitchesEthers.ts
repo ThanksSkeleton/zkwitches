@@ -107,13 +107,11 @@ async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
     }
 }
 
-async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
+async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
 {
-    let isComplex : boolean = false;
-
-    if (isComplex) 
+    if (level != 0) 
     {
-        return Action_Complex(tgs, priv, actionInfo);
+        return Action_Complex(tgs, priv, actionInfo, level);
     } 
     else 
     {
@@ -121,10 +119,10 @@ async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: 
     }
 }
 
-async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
+async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
 {
     await connectContract();
-    let witness = await generateWitness(ActionWASM, ActionZKey, priv);
+    let witness = await generateWitness(ActionWASM, ActionZKey, [priv, tgs.players[priv.slot].WitchAlive, level]); // TODO FIX
     let errorMsg;
 
     let txn = await zkWitches.ActionComplex(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
@@ -333,9 +331,9 @@ export class ZKBackend implements IZKBackend
         await this.RefreshStatus();
     }
 
-    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo): Promise<void> 
+    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
     {
-        await Action(this.tgs, priv, action);
+        await Action(this.tgs, priv, action, level);
         await this.RefreshStatus();
     }
 

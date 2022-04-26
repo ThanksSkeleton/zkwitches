@@ -6,16 +6,7 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend } from "../zkWitchesTypes";
-// import { GameStateEnum, PrivatePlayerInfo, TotalGameState } from "../zkwitchesValidation_start";
-
-// CitizenSelector
-// WaitingOnOthersToJoin
-// MyAction
-// MyResponse
-// OtherTurn
-// GameOver
-// LoadingScreen
+import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo } from "../zkWitchesTypes";
 
 enum UIState 
 {
@@ -72,24 +63,6 @@ function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, p
   }
 }
 
-
-// YOUR RESPONSE
-// NOT YOUR TURN
-// GAME OVER
-// LOADING
-
-// export async function LoadingFlicker(set: React.Dispatch<React.SetStateAction<boolean>>, actualAction: Promise<void>): Promise<void> 
-// {    
-//   console.log("A1");
-//   set(true);
-//   console.log("A2");
-//   await actualAction;
-//   console.log("A3");
-//   set(false);
-//   console.log("A4");
-
-// }
-
 export default function Play() 
 {
   const [priv, setPriv] = useState<PrivatePlayerInfo>(DefaultPPI());
@@ -120,7 +93,7 @@ export default function Play()
       {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector disabled={false} submit_action={wrapper(() => example(), "Selecting Citizens")} />}
       {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
       {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState()} priv={priv} backend={backend} />}
-      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={wrapper(() => backend.RespondToAccusation(priv), "Sending Response to Accusation")} response_description={""} />}
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={wrapper(() => backend.RespondToAccusation(priv), "Sending Response to Accusation")} response_description={""} />} // TODO response message
       {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
 
@@ -228,6 +201,7 @@ function TypeSelector(props: TypeSelectorProps) {
           max={3}
           // color={props.color} TODO FIX
           />
+          <TextField label="Witch" variant="outlined" InputProps={{readOnly: true,}} />
           <Checkbox 
           // color={props.color} TODO FIX
           // label="Witch"
@@ -264,7 +238,7 @@ type MyActionProps =
 function MyAction(props: MyActionProps) {
 
   // TODO FIX
-  let enemyPlayerIds = [2,3,4];
+  let enemyPlayerIds = [1,2,3];
 
   return (
     <Stack direction="column" spacing={4}>
@@ -334,58 +308,6 @@ function ResourceIndicator(props: ResourceIndicatorProps) {
   );
 }
 
-// function LumberTableau(props_outer) 
-// {
-//     return (
-//         <ActionTableau 
-//         color="lumber" 
-//         disabled={[false, true, true, true]} 
-//         type="Lumberjack" 
-//         actionDesc={["gather 1 lumber", "gather 2 lumber", "gather 3 lumber", "gather 4 lumber"]} 
-//         action={[{},{},{},{}]}
-//         />
-//     )
-// }
-
-// function FoodTableau(boolean[4]) 
-// {
-//     return (
-//         <ActionTableau 
-//         color="food" 
-//         disabled={[false, true, true, true]} 
-//         type="Farmer" 
-//         actionDesc={["gather 1 food", "gather 2 food", "gather 3 food", "gather 4 food"]} 
-//         action={[{},{},{},{}]}
-//         />
-//     )
-// }
-
-// function BrigandTableau(props_outer) 
-// {
-//     return (
-//         <ActionTableau 
-//         color="brigand" 
-//         disabled={[false, true, true, true]} 
-//         type="Brigand" 
-//         actionDesc={["Trade 2 food for 1 Lumber", "Trade 2 Lumber for 1 Food", "Steal 1 Lumber", "Steal 1 Food"]} 
-//         action={[{},{},{},{}]}
-//         />
-//     )
-// }
-
-// function InquisitorTableau(props_outer) 
-// {
-//     return (
-//         <ActionTableau 
-//         color="inquisitor" 
-//         disabled={[false, true, true, true]} 
-//         type="Inquisitor" 
-//         actionDesc={["Inquisition for 3 Food 3 Lumber", "Inquisition for 2 Food 2 Lumber", "Inquisition for 1 Food 1 Lumber", "Inquisition for Free"]} 
-//         action={[{},{},{},{}]}
-//         />
-//     )
-// }
-
 type TableauProps =
 {
   type: number;
@@ -396,33 +318,88 @@ type TableauProps =
 }
 
 function ActionTableau(props: TableauProps) {
+  let colors = ["food", "lumber", "brigand", "inquisitor"];
+  let type_string = ["Farmer", "LumberJack", "Brigand", "Inquisitor"];
+  // TODO Ugly
+
+  let description_grid = [
+                          ["gather 1 food", "gather 2 food", "gather 3 food", "gather 4 food"],
+                          ["gather 1 lumber", "gather 2 lumber", "gather 3 lumber", "gather 4 lumber"],
+                          ["Trade 2 food for 1 Lumber", "Trade 2 Lumber for 1 Food", "Steal 1 Lumber", "Steal 1 Food"], 
+                          ["Inquisition for 3 Food 3 Lumber", "Inquisition for 2 Food 2 Lumber", "Inquisition for 1 Food 1 Lumber", "Inquisition for Free"]
+                         ];
+  
+                         // TODO WitchType
+
+  function HaveCitizens(priv: PrivatePlayerInfo, tgs: TotalGameState, citizen_type: number, count_required: number ) : boolean 
+  {
+    return (priv.citizens[citizen_type] >= count_required || (priv.witches[citizen_type] == 1 && tgs.players[priv.slot].WitchAlive[citizen_type] == 1))
+  } 
+
+  function HasFoodAndLumber(tgs: TotalGameState,  food_req: number, lumber_req: number, playerId?: number) : boolean 
+  {
+    if ( playerId == undefined ) return false;  
+    return (tgs.players[playerId].food >= food_req && tgs.players[playerId].lumber >= lumber_req);
+  }
+
+  function WitchAlive(tgs: TotalGameState, playerId?: number, witch_type?: number) : boolean 
+  {
+    if ( playerId == undefined ) return false;  
+    if ( witch_type == undefined ) return false;  
+    return (tgs.players[playerId].WitchAlive[witch_type] == 1); 
+  }
+
+  let priv = props.actionProps.priv;
+  let tgs = props.actionProps.tgs;
+
+  // TODO super ugly
+
+  let enabled_grid = 
+  [
+    [HaveCitizens(priv, tgs, 0, 0), HaveCitizens(priv, tgs, 0, 1), HaveCitizens(priv, tgs, 0, 2), HaveCitizens(priv, tgs, 0, 3)],
+    [HaveCitizens(priv, tgs, 1, 0), HaveCitizens(priv, tgs, 1, 1), HaveCitizens(priv, tgs, 1, 2), HaveCitizens(priv, tgs, 1, 3)],
+    [HaveCitizens(priv, tgs, 2, 0) && HasFoodAndLumber(tgs, 2, 0, priv.slot) && HasFoodAndLumber(tgs, 0, 1, props.target,), 
+     HaveCitizens(priv, tgs, 2, 1) && HasFoodAndLumber(tgs, 0, 2, priv.slot) && HasFoodAndLumber(tgs, 1, 0, props.target,),
+     HaveCitizens(priv, tgs, 2, 2) && HasFoodAndLumber(tgs, 0, 1, props.target), 
+     HaveCitizens(priv, tgs, 2, 3) && HasFoodAndLumber(tgs, 1, 0, props.target)], 
+     [HaveCitizens(priv, tgs, 3, 0) && HasFoodAndLumber(tgs, 3, 3, priv.slot) && WitchAlive(tgs, props.target, props.witchType), 
+      HaveCitizens(priv, tgs, 3, 1) && HasFoodAndLumber(tgs, 2, 2, priv.slot) && WitchAlive(tgs, props.target, props.witchType),
+      HaveCitizens(priv, tgs, 3, 2) && HasFoodAndLumber(tgs, 1, 1, priv.slot) && WitchAlive(tgs, props.target, props.witchType),
+      HaveCitizens(priv, tgs, 3, 3) && WitchAlive(tgs, props.target, props.witchType)]
+    ];
+
+    let actionInfo : ActionInfo = { type : props.type, target : props.target, witchType : props.witchType };
+
     return (
         <ButtonGroup
         variant="contained"
         orientation="vertical"
         aria-label="outlined button group"          
-        //color={props.color}
+        //color={colors[props.type]} TODO FIX
         >
           <Button
-          onClick={() => props.action[3]}
-          disabled={!props.action_enabled[3]}
+          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 3)}
+          disabled={enabled_grid[props.type][3]}
           >
-          {props.type} 3 - {props.action_description[3]}
+          {type_string[props.type]} 3 - {description_grid[props.type][3]}
           </Button>
           <Button
-          onClick={() => props.action[2]}
-          disabled={!props.action_enabled[2]}>
-          {props.type} 2 - {props.action_description[2]}
+          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 2)}
+          disabled={enabled_grid[props.type][2]}
+          >
+          {type_string[props.type]} 2 - {description_grid[props.type][2]}
           </Button>
           <Button
-          onClick={() => props.action[1]}
-          disabled={!props.action_enabled[1]}>
-          {props.type} 1 - {props.action_description[1]}
+          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 1)}
+          disabled={enabled_grid[props.type][1]}
+          >
+          {type_string[props.type]} 1 - {description_grid[props.type][1]}
           </Button>
           <Button
-          onClick={() => props.action[0]}
-          disabled={!props.action_enabled[0]}>
-          {props.type} 0 - {props.action_description[0]}
+          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 0)}
+          disabled={enabled_grid[props.type][0]}
+          >
+          {type_string[props.type]} 0 - {description_grid[props.type][0]}
           </Button>
         </ButtonGroup>
     );

@@ -2,10 +2,37 @@ import Fab from '@mui/material/Fab';
 import Backdrop from '@mui/material/Backdrop';
 import { useEffect, useState } from 'react';
 
-const testnetChainId = '0x6357d2e0'
+const harmonyChain = 
+{
+  chainId:'0x6357d2e0',
+  chainName: 'Harmony Testnet',
+  nativeCurrency: {
+    name: 'ONE',
+    symbol: 'ONE',
+    decimals: 18
+  },
+  rpcUrls: ['https://api.s0.b.hmny.io'],
+  blockExplorerUrls: ['https://explorer.pops.one']
+};
+
+const localhost = 
+{
+  chainId:'1337',
+  chainName: 'Localhost',
+  nativeCurrency: {
+    name: 'ETH',
+    symbol: 'ETH',
+    decimals: 18
+  },
+  rpcUrls: ['http://localhost:8545'],
+  blockExplorerUrls: []
+}
+
 
 export default function WalletConnector() {
   const { ethereum } = window;
+
+  let targetChain = localhost;
 
   if (!ethereum) {
     alert("Make sure you have Metamask installed!");
@@ -49,18 +76,18 @@ export default function WalletConnector() {
     let chainId = await ethereum.request({ method: 'eth_chainId' });
     console.log("Chain ID:", chainId, parseInt(chainId));
 
-    setCorrectChain(chainId === testnetChainId);
+    setCorrectChain(chainId === targetChain.chainId);
   }
 
   const changeChainId = async () => {
     let chainId = await ethereum.request({ method: 'eth_chainId' });
 
-    if (chainId !== testnetChainId) {
+    if (chainId !== targetChain.chainId) {
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{
-            chainId: testnetChainId
+            chainId: targetChain.chainId
           }], // chainId must be in hexadecimal numbers
         });
         chainId = await ethereum.request({ method: 'eth_chainId' });
@@ -71,19 +98,7 @@ export default function WalletConnector() {
           try {
             await ethereum.request({
               method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: testnetChainId,
-                  chainName: 'Harmony Testnet',
-                  nativeCurrency: {
-                    name: 'ONE',
-                    symbol: 'ONE',
-                    decimals: 18
-                  },
-                  rpcUrls: ['https://api.s0.b.hmny.io'],
-                  blockExplorerUrls: ['https://explorer.pops.one']
-                },
-              ],
+              params: [ targetChain ],
             });
           } catch (addError) {
             console.error(addError);
@@ -93,7 +108,7 @@ export default function WalletConnector() {
       }
       window.location.reload();
     }
-    setCorrectChain(chainId === testnetChainId);
+    setCorrectChain(chainId === targetChain.chainId);
   }
 
   const changeAccount = async () => {

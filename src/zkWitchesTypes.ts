@@ -84,14 +84,19 @@ export function DefaultPPI() : PrivatePlayerInfo
     }
 }
 
-export type ActionInfo = {}
+export type ActionInfo = 
+{
+    type: number;
+    target?: number;
+    witchType?: number;
+}
 
 export interface IZKBackend 
 {
     GetTotalGameState() : TotalGameState;
     RefreshStatus(): Promise<void>;
     JoinGame(priv: PrivatePlayerInfo) : Promise<void>;
-    DoAction(priv: PrivatePlayerInfo, action:ActionInfo): Promise<void>;
+    DoAction(priv: PrivatePlayerInfo, action:ActionInfo, level:number): Promise<void>;
     RespondToAccusation(priv: PrivatePlayerInfo): Promise<void>;
     Surrender(): Promise<void>
     KickActivePlayer(): Promise<void>
