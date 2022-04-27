@@ -101,9 +101,16 @@ export function Total(priv: PrivatePlayerInfo) : number
     return priv.citizens[0] + priv.citizens[1] + priv.citizens[2] + priv.citizens[3] + priv.witches[0] + priv.witches[1] + priv.witches[2] + priv.witches[3];
 }  
 
-export function ToJoinParameters(ppi: PrivatePlayerInfo) : number[]
+export type JoinParameters = 
 {
-    return [ppi.salt, ppi.citizens[0], ppi.citizens[1], ppi.citizens[2], ppi.citizens[3], ppi.witches[0], ppi.witches[1], ppi.witches[2], ppi.witches[3]]
+	CitizenCount : number[],
+	WitchPresent : number[],
+	HandSalt : number
+}
+
+export function ToJoinParameters(ppi: PrivatePlayerInfo) : JoinParameters
+{
+    return { CitizenCount: ppi.citizens, WitchPresent: ppi.witches, HandSalt: ppi.salt };
 }
 
 export type ActionInfo = 

@@ -12,7 +12,7 @@ const harmonyChain =
     rpcUrls: ['https://api.s0.b.hmny.io'],
     blockExplorerUrls: ['https://explorer.pops.one']
   },
-  address: "0xa72325a1ad4b9145335aeb2fcba6ea6e2bbd85e0a32e155e489043b7fb737a96" // TODO FIX
+  address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9" // TODO FIX
 };
 
 const localhost = 
@@ -29,7 +29,7 @@ const localhost =
     rpcUrls: ['http://localhost:8545'],
     blockExplorerUrls: []
   },
-  address: "0xa72325a1ad4b9145335aeb2fcba6ea6e2bbd85e0a32e155e489043b7fb737a96"
+  address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9"
 }
 
 export function targetChain(){ return localhost; }

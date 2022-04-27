@@ -23,10 +23,7 @@ function unstringifyBigInts(o) {
     }
 }
 
-export async function generateCalldata(wasmfile, zkeyPath, in_array) {
-    const input = {
-        "in": in_array
-    }
+export async function generateCalldata(wasmfile, zkeyPath, input) {
 
     let generateWitnessSuccess = true;
 

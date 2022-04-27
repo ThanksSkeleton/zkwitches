@@ -22,28 +22,31 @@ async function connectContract() {
 
 type witness = 
 {
-    a: any;
-    b: any;
-    c: any;
-    inputs : any;
+    a: any[];
+    b: any[];
+    c: any[];
+    inputs : any[];
 }
 
 async function generateWitness(wasmfile: string, zkeyPath: string, inputData: any) : Promise<witness> {
-    let a = [];
-    let b = [];
-    let c = [];
-    let inputs = [];
     let errorString = 'Fail to generate witness.'
 
     let calldata = await generateCalldata(wasmfile, zkeyPath, inputData);
     if (!calldata) throw errorString;
     console.log('calldata generated');
-    a.push(calldata[0]);
-    b.push(calldata[1]);
-    c.push(calldata[2]);
-    inputs.push(calldata[3]);
+    console.log("calldata Raw:");
+    console.log(calldata);
+    let a = calldata[0];
+    let b = calldata[1];
+    let c = calldata[2];
+    let inputs = calldata[3];
 
-    return { a, b, c, inputs };
+    let toReturn = { a, b, c, inputs };
+
+    console.log("Calldata pushed");
+    console.log(toReturn);
+
+    return toReturn;
 }
 
 const JoinWASM : string = "/HC/HandCommitment.wasm";
@@ -87,7 +90,7 @@ async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
     let witness = await generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv));
     let errorMsg;
 
-    let txn = await zkWitches.joinGame(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.JoinGame(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -125,7 +128,7 @@ async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, acti
     let witness = await generateWitness(ActionWASM, ActionZKey, [priv, tgs.players[priv.slot].WitchAlive, level]); // TODO FIX
     let errorMsg;
 
-    let txn = await zkWitches.ActionComplex(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.ActionWithProof(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -151,7 +154,7 @@ async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actio
 
     let errorMsg;
 
-    let txn = await zkWitches.ActionSimple(tgs, priv) // TODO Review
+    let txn = await zkWitches.ActionNoProof(actionInfo.type as number, actionInfo.target as number, actionInfo.witchType as number) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
