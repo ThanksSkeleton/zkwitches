@@ -6,7 +6,7 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo } from "../zkWitchesTypes";
+import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo, WrappedZKBackend, Total } from "../zkWitchesTypes";
 
 enum UIState 
 {
@@ -70,30 +70,20 @@ export default function Play()
   const [loadingString, setLoadingString] = useState<string>("");
 
   let backend : IZKBackend = new EmptyZKBackend();
-
-  function example() : Promise<void>
-  {
-    return new Promise(r => { setTimeout(r, 2000)});
-  }
-
-  const wrapper = (inner: () => Promise<void>, descrption: string) => async () => 
-  {
-    setIsLoading(true);
-    setLoadingString(descrption);
-    await inner();
-    setIsLoading(false);
-  }
+  backend = new WrappedZKBackend(backend, setIsLoading, setLoadingString);
 
   let state : UIState = GetUIState(isLoading, "fake", backend.GetTotalGameState(), priv);
 
+  console.log("master priv ", priv);
+
   return (
     <Stack direction="column" spacing={4}>
-      {state as UIState === UIState.NoData as UIState && <NoData action={wrapper(() => backend.RefreshStatus(), "Loading Initial Data")} />}
+      {state as UIState === UIState.NoData as UIState && <NoData action={() => backend.RefreshStatus()} />}
 
-      {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector disabled={false} submit_action={wrapper(() => example(), "Selecting Citizens")} />}
+      {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv} setPriv={setPriv} backend={backend} />}
       {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
       {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState()} priv={priv} backend={backend} />}
-      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={wrapper(() => backend.RespondToAccusation(priv), "Sending Response to Accusation")} response_description={""} />} // TODO response message
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={""} />}
       {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
 
@@ -102,8 +92,9 @@ export default function Play()
   );
 }
 
-// CITIZEN SELECTOR
 
+let colors = ["food", "lumber", "brigand", "inquisitor"];
+let type_string = ["Farmer", "LumberJack", "Brigand", "Inquisitor"];
 
 type NoDataProps = 
 {
@@ -120,24 +111,28 @@ function NoData(props: NoDataProps)
   );
 }
 
-
+// CITIZEN SELECTOR
 
 type CitizenSelectorProps = 
 {
-  disabled: boolean;
-  submit_action: React.MouseEventHandler<HTMLButtonElement>;
+  priv: PrivatePlayerInfo;
+  setPriv: React.Dispatch<React.SetStateAction<PrivatePlayerInfo>>
+  backend: IZKBackend
 }
 
 function CitizenSelector(props: CitizenSelectorProps) 
 {
+
+  let total = Total(props.priv);
+
   return (
       <Stack direction="column" spacing = {1}>
-          <TypeSelector color="food" type="Farmer" />
-          <TypeSelector color="lumber" type="Lumberjack" />
-          <TypeSelector color="brigand" type="Brigand" />
-          <TypeSelector color="inquisitor" type="Inquisitor" />
+          <TypeSelector typeIndex={0} priv={props.priv} setPriv={props.setPriv} />
+          <TypeSelector typeIndex={1} priv={props.priv} setPriv={props.setPriv} />
+          <TypeSelector typeIndex={2} priv={props.priv} setPriv={props.setPriv} />
+          <TypeSelector typeIndex={3} priv={props.priv} setPriv={props.setPriv} />
           <Divider variant="middle" />
-          <CompleteMeter action={props.submit_action} disabled={props.disabled} />
+          <CompleteMeter action={() => props.backend.JoinGame(props.priv)} total={total} />
       </Stack>
   );
 }
@@ -150,29 +145,33 @@ function valueText(value : number, index: number)
 
 type CompleteMeterProps =
 {
-    disabled: boolean;
     action: React.MouseEventHandler<HTMLButtonElement>;
+    total: number 
 }
 
 function CompleteMeter(props: CompleteMeterProps) 
 {
+  let sliderMark = [{value:7, label:"7"}];
+
   return (
       <Stack direction="row"
       spacing = {1}>            
           <Slider
               aria-label="Total Meter"
-              defaultValue={0}
+              defaultValue={props.total}
+              value={props.total}
               getAriaValueText={valueText}
               valueLabelDisplay="auto"
               step={1}
-              marks
               min={0}
-              max={7}
-              disabled 
+              max={8}
+              disabled
+              color={props.total === 7 ? "primary" : "secondary"} 
+              marks={sliderMark}
           />
           <Button
               onClick={props.action}
-              disabled={props.disabled}>
+              disabled={!(props.total === 7)}>
               Submit
           </Button>
       </Stack>
@@ -181,28 +180,57 @@ function CompleteMeter(props: CompleteMeterProps)
 
 type TypeSelectorProps =
 {
-  color: string; // TODO Doesnt WORK
-  type: string;
+  typeIndex: number
+
+  priv: PrivatePlayerInfo;
+  setPriv: React.Dispatch<React.SetStateAction<PrivatePlayerInfo>>
 }
 
 function TypeSelector(props: TypeSelectorProps) {
+
+  const [slider, setSlider] = useState(props.priv.citizens[props.typeIndex]);
+  const [checked, setChecked] = useState(props.priv.witches[props.typeIndex] == 1);
+
+  let labelString = type_string[props.typeIndex];
+  
+  const handleChangeCheckBox = (event: any) => 
+  {
+    setChecked(event.target.checked);
+    console.log("checkbox newValue ", event.target.checked);
+    props.priv.witches[props.typeIndex] = (event.target.checked ? 1 : 0);
+    console.log("checkbox priv ", props.priv);
+    props.setPriv({... props.priv})
+  };
+
+  const handleChangeSlider = (event: any, newValue:number|number[]) => 
+  {
+    setSlider(newValue as number);
+    console.log("slider newValue ", newValue);
+    props.priv.citizens[props.typeIndex] = newValue as number;
+    console.log("slider priv ", props.priv);
+    props.setPriv({... props.priv})
+  };
+
   return (
       <Stack direction="row"
       spacing = {1}>
-          <TextField label={props.type} variant="outlined" InputProps={{readOnly: true,}} />
+          <TextField label={labelString} variant="outlined" InputProps={{readOnly: true,}} />
           <Slider
-          aria-label={props.type + " Selector"}
-          defaultValue={0}
+          aria-label={labelString + " Selector"}
+          defaultValue={slider}
           getAriaValueText={valueText}
           valueLabelDisplay="auto"
           step={1}
           marks
           min={0}
           max={3}
+          onChangeCommitted={handleChangeSlider}
           // color={props.color} TODO FIX
           />
           <TextField label="Witch" variant="outlined" InputProps={{readOnly: true,}} />
-          <Checkbox 
+          <Checkbox
+          checked={checked}
+          onChange={handleChangeCheckBox}
           // color={props.color} TODO FIX
           // label="Witch"
           // labelPlacement="top"
@@ -318,8 +346,6 @@ type TableauProps =
 }
 
 function ActionTableau(props: TableauProps) {
-  let colors = ["food", "lumber", "brigand", "inquisitor"];
-  let type_string = ["Farmer", "LumberJack", "Brigand", "Inquisitor"];
   // TODO Ugly
 
   let description_grid = [

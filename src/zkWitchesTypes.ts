@@ -84,6 +84,12 @@ export function DefaultPPI() : PrivatePlayerInfo
     }
 }
 
+export function Total(priv: PrivatePlayerInfo) : number
+{
+    return priv.citizens[0] + priv.citizens[1] + priv.citizens[2] + priv.citizens[3] + priv.witches[0] + priv.witches[1] + priv.witches[2] + priv.witches[3];
+}  
+
+
 export type ActionInfo = 
 {
     type: number;
@@ -145,4 +151,79 @@ export class EmptyZKBackend implements IZKBackend
         this.tgs = tgsinput;
         return this.RefreshStatus();
     }
+}
+
+export class WrappedZKBackend implements IZKBackend 
+{
+    private innerZKB : IZKBackend;
+    private lb : (value: React.SetStateAction<boolean>) => void;
+    private ls : (value: React.SetStateAction<string>) => void;
+
+    constructor(inner: IZKBackend, loadingBool: (value: React.SetStateAction<boolean>) => void, loadingString: (value: React.SetStateAction<string>) => void)
+    {
+        this.innerZKB = inner;
+        this.lb = loadingBool;
+        this.ls = loadingString;
+    }
+
+    GetTotalGameState(): TotalGameState 
+    {
+        return this.innerZKB.GetTotalGameState();
+    }
+
+    async RefreshStatus(): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Refreshing Status...");
+        await this.innerZKB.RefreshStatus();
+        this.lb(false);
+    }
+
+    async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Joining Game...");
+        await this.innerZKB.JoinGame(priv);
+        this.lb(false);    
+    }
+
+    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Performing Action...");
+        await this.innerZKB.DoAction(priv, action, level);
+        this.lb(false);        
+    }
+
+    async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Responding to Accusation...");
+        await this.innerZKB.RespondToAccusation(priv);
+        this.lb(false);       
+    }
+
+    async Surrender(): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Surrendering...");
+        await this.innerZKB.Surrender();
+        this.lb(false);         }
+
+    async KickActivePlayer(): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("Kicking Active Player...");
+        await this.innerZKB.KickActivePlayer();
+        this.lb(false);     
+    }
+
+    async DebugSetTotalGameState(tgs: TotalGameState): Promise<void> 
+    {
+        this.lb(true);
+        this.ls("DEBUG: Setting game state...");
+        await this.innerZKB.DebugSetTotalGameState(tgs);
+        this.lb(false);         
+    }
+
 }
