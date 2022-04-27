@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
 import zkWitchesArtifact from './artifacts/zkWitches.json';
+import { targetChain } from "./chainInfo";
 
-import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, TotalGameState } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
-import targetChain from "./WalletConnector";
 
 let zkWitches: ethers.Contract;
 
@@ -15,7 +15,7 @@ async function connectContract() {
     let signer = provider.getSigner();
     console.log('signer: ', await signer.getAddress());
 
-    zkWitches = new ethers.Contract(targetChain().props['address'], zkWitchesArtifact.abi, signer);
+    zkWitches = new ethers.Contract(targetChain()['address'], zkWitchesArtifact.abi, signer);
 
     console.log("Connect to zkWitches Contract:", zkWitches);
 }
@@ -46,8 +46,8 @@ async function generateWitness(wasmfile: string, zkeyPath: string, inputData: an
     return { a, b, c, inputs };
 }
 
-const JoinWASM : string = "./public/HC/HandCommitment.wasm";
-const JoinZKey : string = "./public/HC/circuit_final.zkey";
+const JoinWASM : string = "/HC/HandCommitment.wasm";
+const JoinZKey : string = "/HC/circuit_final.zkey";
 
 const ActionWASM : string = "./public/VM/ValidMove.wasm";
 const ActionZKey : string = "./public/VM/circuit_final.zkey";
@@ -84,7 +84,7 @@ async function GetTgs() : Promise<TotalGameState>
 async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
 {
     await connectContract();
-    let witness = await generateWitness(JoinWASM, JoinZKey, priv);
+    let witness = await generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv));
     let errorMsg;
 
     let txn = await zkWitches.joinGame(witness.a, witness.b, witness.c, witness.inputs) // TODO Review

@@ -66,7 +66,7 @@ export type PrivatePlayerInfo =
 
     address: string
 
-    salt: string
+    salt: number
 
     citizens: number[]
     witches: number[]
@@ -78,9 +78,21 @@ export function DefaultPPI() : PrivatePlayerInfo
     {
         slot: 0,
         address: "Random",
-        salt: "Random",
+        salt: 0,
         citizens: [0, 1, 2, 3],
         witches: [0, 1, 0, 0]
+    }
+}
+
+export function Empty(address: string) : PrivatePlayerInfo 
+{
+    return <PrivatePlayerInfo> 
+    {
+        slot: 0,
+        address: address,
+        salt: 0,
+        citizens: [0, 0, 0, 0],
+        witches: [0, 0, 0, 0]
     }
 }
 
@@ -89,6 +101,10 @@ export function Total(priv: PrivatePlayerInfo) : number
     return priv.citizens[0] + priv.citizens[1] + priv.citizens[2] + priv.citizens[3] + priv.witches[0] + priv.witches[1] + priv.witches[2] + priv.witches[3];
 }  
 
+export function ToJoinParameters(ppi: PrivatePlayerInfo) : number[]
+{
+    return [ppi.salt, ppi.citizens[0], ppi.citizens[1], ppi.citizens[2], ppi.citizens[3], ppi.witches[0], ppi.witches[1], ppi.witches[2], ppi.witches[3]]
+}
 
 export type ActionInfo = 
 {

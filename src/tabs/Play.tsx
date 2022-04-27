@@ -7,6 +7,7 @@ import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
 import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo, WrappedZKBackend, Total } from "../zkWitchesTypes";
+import { ZKBackend } from "../zkWitchesEthers";
 
 enum UIState 
 {
@@ -69,7 +70,7 @@ export default function Play()
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingString, setLoadingString] = useState<string>("");
 
-  let backend : IZKBackend = new EmptyZKBackend();
+  let backend : IZKBackend = new ZKBackend();
   backend = new WrappedZKBackend(backend, setIsLoading, setLoadingString);
 
   let state : UIState = GetUIState(isLoading, "fake", backend.GetTotalGameState(), priv);

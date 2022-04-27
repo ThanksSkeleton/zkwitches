@@ -60,8 +60,8 @@ export async function generateCalldata(wasmfile, zkeyPath, in_array) {
     return [a, b, c, Input];
 }
 
-async function generateWitness (wasmfile, input) {
-	const response = await fetch(wasmfile);
+async function generateWitness (wasmFileName, input) {
+	const response = await fetch(wasmFileName);
 	const buffer = await response.arrayBuffer();
 	//console.log(buffer);
 	let buff;
