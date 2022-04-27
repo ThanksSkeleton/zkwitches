@@ -63,7 +63,7 @@ async function GetTgs() : Promise<TotalGameState>
     await connectContract();
 
     let errorMsg;
-    let tgs = await zkWitches.getTGS().catch((error: any) => {
+    let tgs = await zkWitches.tgs().catch((error: any) => {
         console.log(error);
         if (error.reason) {
             errorMsg = error.reason;
@@ -80,6 +80,8 @@ async function GetTgs() : Promise<TotalGameState>
         //console.log("error: ", errorMsg);
         throw errorMsg;
     }
+
+    console.log("tgs unformatted: ", tgs);
 
     return tgs;
 }
@@ -194,7 +196,7 @@ async function WitchProof_No(priv: PrivatePlayerInfo) : Promise<void>
     let witness = await generateWitness(NoWitchWASM, NoWitchZkey, priv);
     let errorMsg;
 
-    let txn = await zkWitches.WitchNo(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -219,7 +221,7 @@ async function WitchProof_Yes(priv: PrivatePlayerInfo) : Promise<void>
     await connectContract();
     let errorMsg;
 
-    let txn = await zkWitches.WitchYes() // TODO Review
+    let txn = await zkWitches.RespondAccusation_YesWitch() // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -269,7 +271,7 @@ async function KickActivePlayer() : Promise<void>
     await connectContract();
     let errorMsg;
 
-    let txn = await zkWitches.KickActivePlayer() // TODO Review
+    let txn = await zkWitches.KickCurrentPlayer() // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -294,7 +296,7 @@ async function SetTgs(new_tgs: TotalGameState) : Promise<void>
     await connectContract();
     let errorMsg;
 
-    let txn = await zkWitches.SetTgs(new_tgs) // TODO Review
+    let txn = await zkWitches.DEBUG_SetGameState(new_tgs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -316,11 +318,9 @@ async function SetTgs(new_tgs: TotalGameState) : Promise<void>
 
 export class ZKBackend implements IZKBackend 
 {
-    
+    private tgs?: TotalGameState;
 
-    private tgs: TotalGameState = DefaultTGS();
-
-    GetTotalGameState(): TotalGameState 
+    GetTotalGameState(): TotalGameState | undefined 
     {
         return this.tgs;
     }
@@ -338,13 +338,13 @@ export class ZKBackend implements IZKBackend
 
     async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
     {
-        await Action(this.tgs, priv, action, level);
+        await Action(this.tgs as TotalGameState, priv, action, level);
         await this.RefreshStatus();
     }
 
     async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
     {
-        await WitchProof(this.tgs, priv);
+        await WitchProof(this.tgs as TotalGameState, priv);
         await this.RefreshStatus();    
     }
 

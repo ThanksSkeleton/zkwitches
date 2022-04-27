@@ -122,7 +122,7 @@ export type ActionInfo =
 
 export interface IZKBackend 
 {
-    GetTotalGameState() : TotalGameState;
+    GetTotalGameState() : TotalGameState | undefined;
     RefreshStatus(): Promise<void>;
     JoinGame(priv: PrivatePlayerInfo) : Promise<void>;
     DoAction(priv: PrivatePlayerInfo, action:ActionInfo, level:number): Promise<void>;
@@ -135,9 +135,9 @@ export interface IZKBackend
 
 export class EmptyZKBackend implements IZKBackend 
 {
-    private tgs: TotalGameState = DefaultTGS();
+    private tgs?: TotalGameState;
 
-    GetTotalGameState(): TotalGameState 
+    GetTotalGameState(): TotalGameState | undefined
     {
         return this.tgs;
     }
@@ -189,7 +189,7 @@ export class WrappedZKBackend implements IZKBackend
         this.ls = loadingString;
     }
 
-    GetTotalGameState(): TotalGameState 
+    GetTotalGameState(): TotalGameState | undefined 
     {
         return this.innerZKB.GetTotalGameState();
     }

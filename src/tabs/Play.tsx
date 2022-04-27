@@ -27,7 +27,7 @@ function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, p
   {
     return UIState.LoadingScreen;
   } 
-  else if (tgs == null) 
+  else if (tgs == undefined) 
   {
     return UIState.NoData;
   }
@@ -83,7 +83,7 @@ export default function Play()
 
       {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv} setPriv={setPriv} backend={backend} />}
       {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
-      {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState()} priv={priv} backend={backend} />}
+      {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState() as TotalGameState} priv={priv} backend={backend} />}
       {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={""} />}
       {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
