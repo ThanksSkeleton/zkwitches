@@ -1,5 +1,7 @@
 // CLASSES 
 
+import { ZkWitches } from "./artifacts/ZkWitches_ABI_Types";
+
 export enum GameStateEnum 
 {
     GAME_STARTING,
@@ -32,6 +34,41 @@ export function DefaultTGS() : TotalGameState
     };
 }
 
+export function ToFlatStruct_TGS(input: TotalGameState) : ZkWitches.TotalGameStateStruct
+{
+    return <ZkWitches.TotalGameStateStruct>
+    {
+        shared: input.shared,
+
+        address0: input.playerAddresses[0],
+        address1: input.playerAddresses[1],
+        address2: input.playerAddresses[2],
+        address3: input.playerAddresses[3],
+        
+        player0: ToFlatStruct_PGS(input.players[0]),
+        player1: ToFlatStruct_PGS(input.players[1]),
+        player2: ToFlatStruct_PGS(input.players[2]),
+        player3: ToFlatStruct_PGS(input.players[3])
+    };
+}
+
+export function FromFlatStruct_TGS(input: ZkWitches.TotalGameStateStruct) : TotalGameState
+{
+    return <TotalGameState>
+    {
+        shared : input.shared,
+        // {
+        //     stateEnum: input.shared.stateEnum as GameStateEnum,
+        //     playerSlotWaiting: input.shared.playerSlotWaiting,
+        //     currentNumberOfPlayers: input.shared.currentNumberOfPlayers,
+        //     playerAccusing: input.shared.playerAccusing,
+        //     accusationWitchType: input.shared.accusationWitchType,
+        // },
+        playerAddresses: [input.address0, input.address1, input.address2, input.address3],
+        players: [FromFlatStruct_PGS(input.player0), FromFlatStruct_PGS(input.player1), FromFlatStruct_PGS(input.player2), FromFlatStruct_PGS(input.player3)]
+    };
+}
+
 export type SharedGameState = 
 {
     stateEnum: GameStateEnum
@@ -49,6 +86,8 @@ export type SharedGameState =
     current_sequence_number?: number
 }
 
+
+
 export type PlayerGameState =
 {    
     isAlive: boolean
@@ -59,6 +98,33 @@ export type PlayerGameState =
 
     WitchAlive: number[]
 }
+
+function ToFlatStruct_PGS(input : PlayerGameState) : ZkWitches.PlayerStateStruct
+{
+    return <ZkWitches.PlayerStateStruct> 
+    {
+        isAlive : input.isAlive,
+        handCommitment: input.handCommitment,
+        food: input.food,
+        lumber: input.lumber,
+        WitchAlive0: input.WitchAlive[0],
+        WitchAlive1: input.WitchAlive[1],
+        WitchAlive2: input.WitchAlive[2],
+        WitchAlive3: input.WitchAlive[3],
+    };
+} 
+
+function FromFlatStruct_PGS(input : ZkWitches.PlayerStateStruct) : PlayerGameState
+{
+    return <PlayerGameState> 
+    {
+        isAlive : input.isAlive,
+        handCommitment: input.handCommitment,
+        food: input.food,
+        lumber: input.lumber,
+        WitchAlive: [input.WitchAlive0, input.WitchAlive1, input.WitchAlive2, input.WitchAlive3]
+    };
+} 
 
 export type PrivatePlayerInfo =
 {

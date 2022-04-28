@@ -1,12 +1,13 @@
-import { ethers } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 import zkWitchesArtifact from './artifacts/zkWitches.json';
+import { ZkWitches } from './artifacts/ZkWitches_ABI_Types' 
 import { targetChain } from "./chainInfo";
 
-import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToFlatStruct_TGS, FromFlatStruct_TGS } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 
-let zkWitches: ethers.Contract;
+let zkWitches: ZkWitches;
 
 async function connectContract() {
     const { ethereum } = window;
@@ -15,17 +16,17 @@ async function connectContract() {
     let signer = provider.getSigner();
     console.log('signer: ', await signer.getAddress());
 
-    zkWitches = new ethers.Contract(targetChain()['address'], zkWitchesArtifact.abi, signer);
+    zkWitches = new ethers.Contract(targetChain()['address'], zkWitchesArtifact.abi, signer) as ZkWitches;
 
-    console.log("Connect to zkWitches Contract:", zkWitches);
+    console.log("Loaded ZKWitches Contract:", zkWitches);
 }
 
 type witness = 
 {
-    a: any[];
-    b: any[];
-    c: any[];
-    inputs : any[];
+    a: [BigNumberish, BigNumberish];
+    b: [[BigNumberish, BigNumberish],[BigNumberish, BigNumberish]];
+    c: [BigNumberish, BigNumberish];
+    inputs : BigNumberish[];
 }
 
 async function generateWitness(wasmfile: string, zkeyPath: string, inputData: any) : Promise<witness> {
@@ -62,8 +63,9 @@ async function GetTgs() : Promise<TotalGameState>
 {
     await connectContract();
 
-    let errorMsg;
-    let tgs = await zkWitches.tgs().catch((error: any) => {
+    let errorMsg;   
+
+    let flat = await zkWitches.GetTGS().catch((error: any) => {
         console.log(error);
         if (error.reason) {
             errorMsg = error.reason;
@@ -72,18 +74,18 @@ async function GetTgs() : Promise<TotalGameState>
         } else {
             errorMsg = "Unknown error."
         }
-    }); // TODO Review
-
-    //console.log("tokenData: ", tokenData);
+    });
 
     if (errorMsg) {
         //console.log("error: ", errorMsg);
         throw errorMsg;
+    } 
+    else if (!flat) 
+    {
+        throw "undefined return value";
     }
 
-    console.log("tgs unformatted: ", tgs);
-
-    return tgs;
+    return FromFlatStruct_TGS(flat);
 }
 
 async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
@@ -92,7 +94,7 @@ async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
     let witness = await generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv));
     let errorMsg;
 
-    let txn = await zkWitches.JoinGame(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.JoinGame(witness.a, witness.b, witness.c, [witness.inputs[0]]) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -127,10 +129,10 @@ async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: 
 async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
 {
     await connectContract();
-    let witness = await generateWitness(ActionWASM, ActionZKey, [priv, tgs.players[priv.slot].WitchAlive, level]); // TODO FIX
+    let witness = await generateWitness(ActionWASM, ActionZKey, [priv, tgs.players[priv.slot].WitchAlive, actionInfo.type, level]); // TODO FIX
     let errorMsg;
 
-    let txn = await zkWitches.ActionWithProof(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -296,7 +298,9 @@ async function SetTgs(new_tgs: TotalGameState) : Promise<void>
     await connectContract();
     let errorMsg;
 
-    let txn = await zkWitches.DEBUG_SetGameState(new_tgs) // TODO Review
+    let flat = ToFlatStruct_TGS(new_tgs);
+
+    let txn = await zkWitches.DEBUG_SetGameState(flat) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
