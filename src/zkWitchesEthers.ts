@@ -115,6 +115,8 @@ async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
         //console.log("error: ", errorMsg);
         throw errorMsg;
     }
+
+    console.log("Successfully Performed Proof-Based Join!")
 }
 
 async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
@@ -166,6 +168,8 @@ async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, acti
         //console.log("error: ", errorMsg);
         throw errorMsg;
     }
+
+    console.log("Successfully Performed Proof-Based Action!")
 }
 
 async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
@@ -237,6 +241,8 @@ async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo) : Pro
         //console.log("error: ", errorMsg);
         throw errorMsg;
     }
+
+    console.log("Successfully Performed Proof-Based Accusation Response!")
 }
 
 async function WitchProof_Yes() : Promise<void>

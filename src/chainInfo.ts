@@ -12,7 +12,7 @@ const harmonyChain =
     rpcUrls: ['https://api.s0.b.hmny.io'],
     blockExplorerUrls: ['https://explorer.pops.one']
   },
-  address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9" // TODO FIX
+  address: "0xE67d92E3fbd9Cb4BC90d58D768D199DB10BB0216" 
 };
 
 const localhost = 
@@ -32,4 +32,4 @@ const localhost =
   address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9"
 }
 
-export function targetChain(){ return localhost; }
+export function targetChain(){ return harmonyChain; }
