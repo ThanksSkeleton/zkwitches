@@ -509,10 +509,10 @@ function DebugMenu(props: DebugMenuProps)
     left: (theme) => theme.spacing(2)
     }}
     >
-      <TextField label="Debug Menu:" variant="outlined" InputProps={{ readOnly: true,}} />
-      <Button onClick={() => props.backend.DebugSetTotalGameState(start)}>RESET</Button>
-      <Button onClick={() => props.backend.DebugSetTotalGameState(actionReady)}>ACTION</Button>
-      <Button onClick={() => props.backend.DebugSetTotalGameState(respondToAccusation)}>RESPOND_TO_ACCUSATION</Button>
+      <TextField label="Demo Menu - choose contract state:" variant="outlined" InputProps={{ readOnly: true,}} />
+      <Button onClick={() => props.backend.DebugSetTotalGameState(start)}>DEMO: JOIN</Button>
+      <Button onClick={() => props.backend.DebugSetTotalGameState(actionReady)}>DEMO: ACTION</Button>
+      <Button onClick={() => props.backend.DebugSetTotalGameState(respondToAccusation)}>DEMO: RESPOND TO ACCUSATION</Button>
     </Stack>);
 }
 
