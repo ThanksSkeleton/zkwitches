@@ -8,7 +8,7 @@ export default function About() {
 
   ## Demo Mode
 
-  Check out the details of Demo Mode [here]((https://github.com/ThanksSkeleton/zkwitches/blob/main/docs/Demo_Mode.md).
+  Check out the details of Demo Mode [here](https://github.com/ThanksSkeleton/zkwitches/blob/main/docs/Demo_Mode.md).
   `;
 
   return (

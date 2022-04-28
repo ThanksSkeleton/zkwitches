@@ -2,6 +2,10 @@
 
  A social deduction game using ZK technology. This game is under development, and currently incomplete. Check TODO.md for current work status.
 
+Watch a video demo of the current state!
+
+https://youtu.be/H34cf3wBk94
+
 ## Player's Summary of the Game
 This is a dapp 4 player game turn based card game involving resource management and social deduction.
 

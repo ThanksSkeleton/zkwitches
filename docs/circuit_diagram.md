@@ -17,7 +17,8 @@ flowchart LR
     subgraph ValidMoveGraph
         direction BT
         CC2(CitizenCount) --> VM(Citizens >= Required OR Witch)
-        CitizenCountRequired -->VM    
+        CitizenCountRequired -->VM
+        T2(Type) -->VM     
         CC2 --> P2(Poseidon)
         WC2(WitchCount) --> VM    
         WC2 --> P2
@@ -40,13 +41,14 @@ flowchart LR
 
     subgraph NoWitchGraph
         direction BT
+        WC3(WitchCount) --> WitchNOTPresent        
         CC3(CitizenCount) --> P3(Poseidon)
-        WC3(WitchCount) --> WitchNOTPresent
+
         WC3 --> P3
         S3(Salt) --> P3
         P3 --> M3(Hash Matches)
         PH3(CommittedHash) ----> M3 
-
+        T3(Type) --> WitchNOTPresent 
         subgraph No Witch Circuit
             P3
             M3
@@ -70,17 +72,20 @@ flowchart LR
     style _ fill:#000000,stroke-width:0px
     style __ fill:#000000,stroke-width:0px
 
-    style CC1 fill:#330000,stroke:#333,stroke-width:4px
-    style CC2 fill:#330000,stroke:#333,stroke-width:4px
-    style CC3 fill:#330000,stroke:#333,stroke-width:4px
+    style CC1 fill:#550000,stroke:#333,stroke-width:4px
+    style CC2 fill:#550000,stroke:#333,stroke-width:4px
+    style CC3 fill:#550000,stroke:#333,stroke-width:4px
 
-    style WC1 fill:#330000,stroke:#333,stroke-width:4px
-    style WC2 fill:#330000,stroke:#333,stroke-width:4px
-    style WC3 fill:#330000,stroke:#333,stroke-width:4px
+    style WC1 fill:#550000,stroke:#333,stroke-width:4px
+    style WC2 fill:#550000,stroke:#333,stroke-width:4px
+    style WC3 fill:#550000,stroke:#333,stroke-width:4px
 
-    style S1 fill:#330000,stroke:#333,stroke-width:4px
-    style S2 fill:#330000,stroke:#333,stroke-width:4px
-    style S3 fill:#330000,stroke:#333,stroke-width:4px
+    style S1 fill:#550000,stroke:#333,stroke-width:4px
+    style S2 fill:#550000,stroke:#333,stroke-width:4px
+    style S3 fill:#550000,stroke:#333,stroke-width:4px
+
+    style T2 fill:#6666FF,stroke:#333,stroke-width:4px,color:#000
+    style T3 fill:#6666FF,stroke:#333,stroke-width:4px,color:#000
 
     style PH2 fill:#6666FF,stroke:#333,stroke-width:4px,color:#000
     style PH3 fill:#6666FF,stroke:#333,stroke-width:4px,color:#000

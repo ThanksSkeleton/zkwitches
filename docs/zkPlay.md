@@ -34,10 +34,10 @@ flowchart BT
     Player2 -.-> Contract
     Player3 -.-> Contract
 
-    style P1S fill:#330000,stroke:#333,stroke-width:4px
-    style P2S fill:#330000,stroke:#333,stroke-width:4px
-    style P3S fill:#330000,stroke:#333,stroke-width:4px
-    style P4S fill:#330000,stroke:#333,stroke-width:4px
+    style P1S fill:#550000,stroke:#333,stroke-width:4px
+    style P2S fill:#550000,stroke:#333,stroke-width:4px
+    style P3S fill:#550000,stroke:#333,stroke-width:4px
+    style P4S fill:#550000,stroke:#333,stroke-width:4px
 
     style P fill:#6666FF,stroke:#333,stroke-width:4px,color:#000
 
