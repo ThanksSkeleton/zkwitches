@@ -84,7 +84,7 @@ export default function Play()
       {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv} setPriv={setPriv} backend={backend} />}
       {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
       {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState() as TotalGameState} priv={priv} backend={backend} />}
-      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={""} />}
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={"Respond to Accusation"} />}
       {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
 
@@ -407,25 +407,25 @@ function ActionTableau(props: TableauProps) {
         >
           <Button
           onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 3)}
-          disabled={enabled_grid[props.type][3]}
+          disabled={!enabled_grid[props.type][3]}
           >
           {type_string[props.type]} 3 - {description_grid[props.type][3]}
           </Button>
           <Button
           onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 2)}
-          disabled={enabled_grid[props.type][2]}
+          disabled={!enabled_grid[props.type][2]}
           >
           {type_string[props.type]} 2 - {description_grid[props.type][2]}
           </Button>
           <Button
           onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 1)}
-          disabled={enabled_grid[props.type][1]}
+          disabled={!enabled_grid[props.type][1]}
           >
           {type_string[props.type]} 1 - {description_grid[props.type][1]}
           </Button>
           <Button
           onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 0)}
-          disabled={enabled_grid[props.type][0]}
+          disabled={!enabled_grid[props.type][0]}
           >
           {type_string[props.type]} 0 - {description_grid[props.type][0]}
           </Button>

@@ -1,5 +1,6 @@
 // CLASSES 
 
+import { BigNumber } from "ethers";
 import { ZkWitches } from "./artifacts/ZkWitches_ABI_Types";
 
 export enum GameStateEnum 
@@ -17,6 +18,12 @@ export type TotalGameState =
     players: PlayerGameState[]
 }
 
+const bogusAddress1 = "0xdd3fd4581271e230360230f9337d5c0430bf44c0"
+const bogusAddress2 = "0xdd3fd4581271e230360230f9337d5c0430bf44c1"
+const bogusAddress3 = "0xdd3fd4581271e230360230f9337d5c0430bf44c2"
+const bogusAddress4 = "0xdd3fd4581271e230360230f9337d5c0430bf44c3"
+
+
 export function DefaultTGS() : TotalGameState
 {
     return <TotalGameState>
@@ -28,8 +35,14 @@ export function DefaultTGS() : TotalGameState
             currentNumberOfPlayers: 0,
             playerAccusing: 0,
             accusationWitchType: 0,
+
+            // TODO BOGUS
+            previous_action_game_block:  BigNumber.from(0),
+            current_block: BigNumber.from(0),
+
+            current_sequence_number: BigNumber.from(0)
         },
-        playerAddresses: ["0x0", "0x0", "0x0" ,"0x0"],
+        playerAddresses: [bogusAddress1, bogusAddress2, bogusAddress3, bogusAddress4],
         players: [Test_BogusPlayer(0), Test_BogusPlayer(0), Test_BogusPlayer(0), Test_BogusPlayer(0)]
     };
 }
@@ -45,8 +58,14 @@ export function StartActionTGS(actualAddress: string) : TotalGameState
             currentNumberOfPlayers: 4,
             playerAccusing: 0,
             accusationWitchType: 0,
+
+            // TODO BOGUS
+            previous_action_game_block:  BigNumber.from(0),
+            current_block: BigNumber.from(0),
+
+            current_sequence_number: BigNumber.from(0)
         },
-        playerAddresses: [actualAddress, "0x1", "0x2", "0x3"],
+        playerAddresses: [actualAddress, bogusAddress2, bogusAddress3, bogusAddress4],
         players: [Test_UserPlayer(), Test_BogusPlayer(1), Test_BogusPlayer(2), Test_BogusPlayer(3)]
     };
 }
@@ -86,8 +105,14 @@ export function RespondToAccusationTGS(actualAddress: string) : TotalGameState
             currentNumberOfPlayers: 4,
             playerAccusing: 1,
             accusationWitchType: 0,
+
+            // TODO BOGUS
+            previous_action_game_block:  BigNumber.from(0),
+            current_block: BigNumber.from(0),
+
+            current_sequence_number: BigNumber.from(0)      
         },
-        playerAddresses: [actualAddress, "0x1", "0x2", "0x3"],
+        playerAddresses: [actualAddress, bogusAddress2, bogusAddress3, bogusAddress4],
         players: [Test_UserPlayer(), Test_BogusPlayer(1), Test_BogusPlayer(2), Test_BogusPlayer(3)]
     };}
   
@@ -139,10 +164,10 @@ export type SharedGameState =
     accusationWitchType: number
 
     // TODO Tracking time for kick and UI state
-    previous_action_game_block?: number
-    current_block?: number
+    previous_action_game_block: BigNumber
+    current_block: BigNumber
 
-    current_sequence_number?: number
+    current_sequence_number: BigNumber
 }
 
 
@@ -226,16 +251,57 @@ export function Total(priv: PrivatePlayerInfo) : number
     return priv.citizens[0] + priv.citizens[1] + priv.citizens[2] + priv.citizens[3] + priv.witches[0] + priv.witches[1] + priv.witches[2] + priv.witches[3];
 }  
 
-export type JoinParameters = 
+export type JoinWitnessParameters = 
 {
 	CitizenCount : number[],
 	WitchPresent : number[],
 	HandSalt : number
 }
 
-export function ToJoinParameters(ppi: PrivatePlayerInfo) : JoinParameters
+export function ToJoinParameters(ppi: PrivatePlayerInfo) : JoinWitnessParameters
 {
     return { CitizenCount: ppi.citizens, WitchPresent: ppi.witches, HandSalt: ppi.salt };
+}
+
+export type NoWitchWitnessParameters =
+{
+	CitizenCount : number[],
+	WitchPresent : number[],
+	HandSalt : number,
+
+	ExpectedHash : string, //"9230182617660605374415851193724903651342296183907450604039318143940998878483",
+	WitchAlive: number[],
+
+	citizenType: number
+}
+
+export function ToNoWitchParameters(priv: PrivatePlayerInfo, tgs: TotalGameState) : NoWitchWitnessParameters 
+{
+    return { CitizenCount: priv.citizens, WitchPresent: priv.witches, HandSalt: priv.salt,
+        ExpectedHash: tgs.players[priv.slot].handCommitment, WitchAlive: tgs.players[priv.slot].WitchAlive,
+        citizenType: tgs.shared.accusationWitchType };
+
+}
+
+export type ValidMoveWitnessParameters =
+{
+	CitizenCount : number[],
+	WitchPresent : number[],
+	HandSalt : number,
+
+	ExpectedHash : string, //"9230182617660605374415851193724903651342296183907450604039318143940998878483",
+	WitchAlive: number[],
+
+	citizenType: number,
+    requiredCitizenCount : number
+}
+
+export function ToValidMoveParameters(priv: PrivatePlayerInfo, tgs: TotalGameState, citizenType: number, requiredCitizenCount: number) : ValidMoveWitnessParameters 
+{
+    return { CitizenCount: priv.citizens, WitchPresent: priv.witches, HandSalt: priv.salt,
+        ExpectedHash: tgs.players[priv.slot].handCommitment, WitchAlive: tgs.players[priv.slot].WitchAlive,
+        citizenType: citizenType, requiredCitizenCount: requiredCitizenCount };
+
 }
 
 export type ActionInfo = 

@@ -3,7 +3,7 @@ import zkWitchesArtifact from './artifacts/zkWitches.json';
 import { ZkWitches } from './artifacts/ZkWitches_ABI_Types' 
 import { targetChain } from "./chainInfo";
 
-import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToFlatStruct_TGS, FromFlatStruct_TGS } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToFlatStruct_TGS, FromFlatStruct_TGS, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 
@@ -56,11 +56,11 @@ async function generateWitness(wasmfile: string, zkeyPath: string, inputData: an
 const JoinWASM : string = "/HC/HandCommitment.wasm";
 const JoinZKey : string = "/HC/circuit_final.zkey";
 
-const ActionWASM : string = "./public/VM/ValidMove.wasm";
-const ActionZKey : string = "./public/VM/circuit_final.zkey";
+const ActionWASM : string = "/VM/ValidMove.wasm";
+const ActionZKey : string = "/VM/circuit_final.zkey";
 
-const NoWitchWASM : string = "./public/NW/NoWitch.wasm";
-const NoWitchZkey: string = "./public/NW/circuit_final.zkey";
+const NoWitchWASM : string = "/NW/NoWitch.wasm";
+const NoWitchZkey: string = "/NW/circuit_final.zkey";
 
 async function GetTgs() : Promise<TotalGameState> 
 {
@@ -132,7 +132,20 @@ async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: 
 async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
 {
     await connectContract();
-    let witness = await generateWitness(ActionWASM, ActionZKey, [priv, tgs.players[priv.slot].WitchAlive, actionInfo.type, level]); // TODO FIX
+    
+    // {
+    //     "CitizenCount" : [ 0, 1, 2, 3 ],
+    //     "WitchPresent" : [ 0, 1, 0, 0 ],
+    //     "HandSalt" : 0,
+    //     "ExpectedHash" : "9230182617660605374415851193724903651342296183907450604039318143940998878483",
+    //     "WitchAlive": [ 1, 1, 1, 1 ],
+    //     "citizenType": 3,
+    //     "requiredCitizenCount" : 3
+    // }
+
+    let actionWitnessParams = ToValidMoveParameters(priv, tgs, actionInfo.type, level);
+
+    let witness = await generateWitness(ActionWASM, ActionZKey, actionWitnessParams); 
     let errorMsg;
 
     let txn = await zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs) // TODO Review
@@ -161,7 +174,9 @@ async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actio
 
     let errorMsg;
 
-    let txn = await zkWitches.ActionNoProof(actionInfo.type as number, actionInfo.target as number, actionInfo.witchType as number) // TODO Review
+    console.log("action: ", actionInfo);
+
+    let txn = await zkWitches.ActionNoProof(actionInfo.type, actionInfo.target ?? 0, actionInfo.witchType ?? 0) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -183,22 +198,25 @@ async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actio
 
 async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void> 
 {
-    let isComplex : boolean = false;
+    let hasWitch : boolean = priv.witches[tgs.shared.accusationWitchType] == 1;
 
-    if (isComplex) 
+    if (!hasWitch) 
     {
-        return WitchProof_No(priv);
+        return WitchProof_No(tgs, priv);
     } 
     else 
     {
-        return WitchProof_Yes(priv);
+        return WitchProof_Yes();
     }
 }
 
-async function WitchProof_No(priv: PrivatePlayerInfo) : Promise<void>
+async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void>
 {
     await connectContract();
-    let witness = await generateWitness(NoWitchWASM, NoWitchZkey, priv);
+
+    let noWitchWitnessParams = ToNoWitchParameters(priv, tgs);
+
+    let witness = await generateWitness(NoWitchWASM, NoWitchZkey, noWitchWitnessParams);
     let errorMsg;
 
     let txn = await zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
@@ -221,7 +239,7 @@ async function WitchProof_No(priv: PrivatePlayerInfo) : Promise<void>
     }
 }
 
-async function WitchProof_Yes(priv: PrivatePlayerInfo) : Promise<void>
+async function WitchProof_Yes() : Promise<void>
 {
     await connectContract();
     let errorMsg;
