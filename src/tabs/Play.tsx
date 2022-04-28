@@ -6,8 +6,8 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo, WrappedZKBackend, Total } from "../zkWitchesTypes";
-import { ZKBackend } from "../zkWitchesEthers";
+import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo, WrappedZKBackend, Total, StartActionTGS, RespondToAccusationTGS } from "../zkWitchesTypes";
+import { ZKBackend, signerAddress } from "../zkWitchesEthers";
 
 enum UIState 
 {
@@ -27,7 +27,7 @@ function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, p
   {
     return UIState.LoadingScreen;
   } 
-  else if (tgs == undefined) 
+  else if (tgs === undefined) 
   {
     return UIState.NoData;
   }
@@ -70,12 +70,12 @@ export default function Play()
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingString, setLoadingString] = useState<string>("");
 
-  let backend : IZKBackend = new ZKBackend();
-  backend = new WrappedZKBackend(backend, setIsLoading, setLoadingString);
+  const [backend] = useState<IZKBackend>(new WrappedZKBackend(new ZKBackend(), setIsLoading, setLoadingString));
 
   let state : UIState = GetUIState(isLoading, "fake", backend.GetTotalGameState(), priv);
 
   console.log("master priv ", priv);
+  console.log("master tgs ", backend.GetTotalGameState());
 
   return (
     <Stack direction="column" spacing={4}>
@@ -89,6 +89,7 @@ export default function Play()
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
 
       {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={loadingString}/>}
+      <DebugMenu backend={backend} address={signerAddress}/>
     </Stack>
   );
 }
@@ -485,3 +486,34 @@ function LoadingScreen(props: LoadingScreenProps)
 {
   return (<TextField label={props.description} variant="outlined" InputProps={{ readOnly: true,}} />); 
 }
+
+// DebugMenu 
+
+type DebugMenuProps = 
+{
+  backend : IZKBackend
+  address: string
+}
+
+function DebugMenu(props: DebugMenuProps) 
+{
+
+  let start = DefaultTGS();
+  let actionReady = StartActionTGS(props.address);
+  let respondToAccusation = RespondToAccusationTGS(props.address);
+
+  return (
+    <Stack direction="row" spacing = {1} sx={{
+    position: "fixed",
+    bottom: (theme) => theme.spacing(2),
+    left: (theme) => theme.spacing(2)
+    }}
+    >
+      <TextField label="Debug Menu:" variant="outlined" InputProps={{ readOnly: true,}} />
+      <Button onClick={() => props.backend.DebugSetTotalGameState(start)}>RESET</Button>
+      <Button onClick={() => props.backend.DebugSetTotalGameState(actionReady)}>ACTION</Button>
+      <Button onClick={() => props.backend.DebugSetTotalGameState(respondToAccusation)}>RESPOND_TO_ACCUSATION</Button>
+    </Stack>);
+}
+
+

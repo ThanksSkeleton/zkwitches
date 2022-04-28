@@ -29,10 +29,69 @@ export function DefaultTGS() : TotalGameState
             playerAccusing: 0,
             accusationWitchType: 0,
         },
-        playerAddresses: [],
-        players: []
+        playerAddresses: ["0x0", "0x0", "0x0" ,"0x0"],
+        players: [Test_BogusPlayer(0), Test_BogusPlayer(0), Test_BogusPlayer(0), Test_BogusPlayer(0)]
     };
 }
+
+export function StartActionTGS(actualAddress: string) : TotalGameState 
+{
+    return <TotalGameState>
+    {
+        shared :
+        {
+            stateEnum: GameStateEnum.WAITING_FOR_PLAYER_TURN,
+            playerSlotWaiting: 0,
+            currentNumberOfPlayers: 4,
+            playerAccusing: 0,
+            accusationWitchType: 0,
+        },
+        playerAddresses: [actualAddress, "0x1", "0x2", "0x3"],
+        players: [Test_UserPlayer(), Test_BogusPlayer(1), Test_BogusPlayer(2), Test_BogusPlayer(3)]
+    };
+}
+
+function Test_UserPlayer() : PlayerGameState
+{
+    return <PlayerGameState> 
+    {
+        isAlive: true,
+        handCommitment : "9230182617660605374415851193724903651342296183907450604039318143940998878483",
+        food: 0,
+        lumber: 0,
+        WitchAlive: [1,1,1,1]
+    }
+}
+
+function Test_BogusPlayer(index: number) : PlayerGameState
+{
+    return <PlayerGameState> 
+    {
+        isAlive: true,
+        handCommitment : index.toString(), 
+        food: 0,
+        lumber: 0,
+        WitchAlive: [1,1,1,1]
+    }
+}
+
+export function RespondToAccusationTGS(actualAddress: string) : TotalGameState 
+{
+    return <TotalGameState>
+    {
+        shared :
+        {
+            stateEnum: GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE,
+            playerSlotWaiting: 0,
+            currentNumberOfPlayers: 4,
+            playerAccusing: 1,
+            accusationWitchType: 0,
+        },
+        playerAddresses: [actualAddress, "0x1", "0x2", "0x3"],
+        players: [Test_UserPlayer(), Test_BogusPlayer(1), Test_BogusPlayer(2), Test_BogusPlayer(3)]
+    };}
+  
+
 
 export function ToFlatStruct_TGS(input: TotalGameState) : ZkWitches.TotalGameStateStruct
 {

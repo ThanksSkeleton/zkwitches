@@ -8,13 +8,16 @@ import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo,
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 
 let zkWitches: ZkWitches;
+export let signerAddress : string; 
 
 async function connectContract() {
     const { ethereum } = window;
 
     let provider = new ethers.providers.Web3Provider(ethereum);
     let signer = provider.getSigner();
-    console.log('signer: ', await signer.getAddress());
+
+    signerAddress = await signer.getAddress();
+    console.log('signer: ', signerAddress);
 
     zkWitches = new ethers.Contract(targetChain()['address'], zkWitchesArtifact.abi, signer) as ZkWitches;
 
@@ -332,6 +335,7 @@ export class ZKBackend implements IZKBackend
     async RefreshStatus(): Promise<void> 
     {
         this.tgs = await GetTgs();
+        console.log(this.tgs);
     }
 
     async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
