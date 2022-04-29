@@ -1,7 +1,7 @@
 # Presentation
 
 * Hello
-* Motivation: Coup and Loveletter
+* Motivation: Coup and Social Deduction
 * ZKPlay Diagram
 * Show UI, connect wallet, open console
 * Explain Witches+Citizens
