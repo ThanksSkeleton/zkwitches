@@ -1,10 +1,10 @@
 // CLASSES 
 
 import { BigNumber } from "ethers";
-import { ZkWitches } from "../import/ZkWitches";
-import { HandCommitmentInput } from "../import/HandCommitment_input"
-import { NoWitchInput } from "../import/NoWitch_input"
-import { ValidMoveInput } from "../import/ValidMove_input"
+import { ZkWitches } from "./import/ZkWitches";
+import { HandCommitmentInput } from "./import/HandCommitment_input"
+import { NoWitchInput } from "./import/NoWitch_input"
+import { ValidMoveInput } from "./import/ValidMove_input"
 
 export type TotalGameState = ZkWitches.TotalGameStateStruct;
 export type SharedGameState = ZkWitches.SharedStateStruct;

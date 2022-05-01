@@ -1,6 +1,6 @@
 import { BigNumberish, ethers } from "ethers";
-import zkWitchesArtifact from '../import/zkWitches.json';
-import { ZkWitches } from '../import/ZkWitches' 
+import zkWitchesArtifact from './import/zkWitches.json';
+import { ZkWitches } from './import/ZkWitches' 
 import { targetChain } from "./chainInfo";
 
 import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
