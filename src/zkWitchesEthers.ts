@@ -3,7 +3,7 @@ import zkWitchesArtifact from '../import/zkWitches.json';
 import { ZkWitches } from '../import/ZkWitches' 
 import { targetChain } from "./chainInfo";
 
-import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
+import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 
@@ -53,14 +53,14 @@ async function generateWitness(wasmfile: string, zkeyPath: string, inputData: an
     return toReturn;
 }
 
-const JoinWASM : string = "/HC/HandCommitment.wasm";
-const JoinZKey : string = "/HC/circuit_final.zkey";
+const JoinWASM : string = "/HandCommitment/HandCommitment.wasm";
+const JoinZKey : string = "/HandCommitment/circuit_final.zkey";
 
-const ActionWASM : string = "/VM/ValidMove.wasm";
-const ActionZKey : string = "/VM/circuit_final.zkey";
+const ActionWASM : string = "/ValidMove/ValidMove.wasm";
+const ActionZKey : string = "/ValidMove/circuit_final.zkey";
 
-const NoWitchWASM : string = "/NW/NoWitch.wasm";
-const NoWitchZkey: string = "/NW/circuit_final.zkey";
+const NoWitchWASM : string = "/NoWitch/NoWitch.wasm";
+const NoWitchZkey: string = "/NoWitch/circuit_final.zkey";
 
 async function GetTgs() : Promise<TotalGameState> 
 {
