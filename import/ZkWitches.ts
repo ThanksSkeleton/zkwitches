@@ -20,7 +20,7 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "./common";
+} from "../common";
 
 export declare namespace ZkWitches {
   export type SharedStateStruct = {
@@ -59,10 +59,7 @@ export declare namespace ZkWitches {
     handCommitment: BigNumberish;
     food: BigNumberish;
     lumber: BigNumberish;
-    WitchAlive0: BigNumberish;
-    WitchAlive1: BigNumberish;
-    WitchAlive2: BigNumberish;
-    WitchAlive3: BigNumberish;
+    WitchAlive: [boolean, boolean, boolean, boolean];
   };
 
   export type PlayerStateStructOutput = [
@@ -70,74 +67,60 @@ export declare namespace ZkWitches {
     BigNumber,
     number,
     number,
-    number,
-    number,
-    number,
-    number
+    [boolean, boolean, boolean, boolean]
   ] & {
     isAlive: boolean;
     handCommitment: BigNumber;
     food: number;
     lumber: number;
-    WitchAlive0: number;
-    WitchAlive1: number;
-    WitchAlive2: number;
-    WitchAlive3: number;
+    WitchAlive: [boolean, boolean, boolean, boolean];
   };
 
   export type TotalGameStateStruct = {
     shared: ZkWitches.SharedStateStruct;
-    address0: string;
-    address1: string;
-    address2: string;
-    address3: string;
-    player0: ZkWitches.PlayerStateStruct;
-    player1: ZkWitches.PlayerStateStruct;
-    player2: ZkWitches.PlayerStateStruct;
-    player3: ZkWitches.PlayerStateStruct;
+    addresses: [string, string, string, string];
+    players: [
+      ZkWitches.PlayerStateStruct,
+      ZkWitches.PlayerStateStruct,
+      ZkWitches.PlayerStateStruct,
+      ZkWitches.PlayerStateStruct
+    ];
   };
 
   export type TotalGameStateStructOutput = [
     ZkWitches.SharedStateStructOutput,
-    string,
-    string,
-    string,
-    string,
-    ZkWitches.PlayerStateStructOutput,
-    ZkWitches.PlayerStateStructOutput,
-    ZkWitches.PlayerStateStructOutput,
-    ZkWitches.PlayerStateStructOutput
+    [string, string, string, string],
+    [
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput
+    ]
   ] & {
     shared: ZkWitches.SharedStateStructOutput;
-    address0: string;
-    address1: string;
-    address2: string;
-    address3: string;
-    player0: ZkWitches.PlayerStateStructOutput;
-    player1: ZkWitches.PlayerStateStructOutput;
-    player2: ZkWitches.PlayerStateStructOutput;
-    player3: ZkWitches.PlayerStateStructOutput;
+    addresses: [string, string, string, string];
+    players: [
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput,
+      ZkWitches.PlayerStateStructOutput
+    ];
   };
 }
 
 export interface ZkWitchesInterface extends utils.Interface {
   functions: {
-    "ActionNoProof(uint256,uint256,uint256)": FunctionFragment;
-    "ActionWithProof(uint256,uint256,uint256[2],uint256[2][2],uint256[2],uint256[7])": FunctionFragment;
-    "DEBUG_Reset()": FunctionFragment;
-    "DEBUG_SetGameState(((int8,int8,int8,int8,int8,uint256,uint256,uint256),address,address,address,address,(bool,uint256,int8,int8,int8,int8,int8,int8),(bool,uint256,int8,int8,int8,int8,int8,int8),(bool,uint256,int8,int8,int8,int8,int8,int8),(bool,uint256,int8,int8,int8,int8,int8,int8)))": FunctionFragment;
+    "ActionNoProof(uint8,uint8,uint8)": FunctionFragment;
+    "ActionWithProof(uint8,uint8,uint256[2],uint256[2][2],uint256[2],uint256[7])": FunctionFragment;
+    "DEBUG_SetGameState(((uint8,uint8,uint8,uint8,uint8,uint256,uint256,uint256),address[4],tuple[4]))": FunctionFragment;
     "GetTGS()": FunctionFragment;
     "JoinGame(uint256[2],uint256[2][2],uint256[2],uint256[1])": FunctionFragment;
     "KickCurrentPlayer()": FunctionFragment;
-    "RespondAccusation_NoWitch(uint256[2],uint256[2][2],uint256[2],uint256[6])": FunctionFragment;
+    "RespondAccusation_NoWitch(uint256[2],uint256[2][2],uint256[2],uint256[2])": FunctionFragment;
     "RespondAccusation_YesWitch()": FunctionFragment;
     "Surrender()": FunctionFragment;
-    "getPlayer(int8)": FunctionFragment;
-    "getPlayerAddress(int8)": FunctionFragment;
-    "getWitchAlive((bool,uint256,int8,int8,int8,int8,int8,int8),int8)": FunctionFragment;
     "hc_verifierAddr()": FunctionFragment;
     "nw_verifierAddr()": FunctionFragment;
-    "slotByAddress(address)": FunctionFragment;
     "tgs()": FunctionFragment;
     "vm_verifierAddr()": FunctionFragment;
   };
@@ -146,7 +129,6 @@ export interface ZkWitchesInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "ActionNoProof"
       | "ActionWithProof"
-      | "DEBUG_Reset"
       | "DEBUG_SetGameState"
       | "GetTGS"
       | "JoinGame"
@@ -154,12 +136,8 @@ export interface ZkWitchesInterface extends utils.Interface {
       | "RespondAccusation_NoWitch"
       | "RespondAccusation_YesWitch"
       | "Surrender"
-      | "getPlayer"
-      | "getPlayerAddress"
-      | "getWitchAlive"
       | "hc_verifierAddr"
       | "nw_verifierAddr"
-      | "slotByAddress"
       | "tgs"
       | "vm_verifierAddr"
   ): FunctionFragment;
@@ -178,10 +156,6 @@ export interface ZkWitchesInterface extends utils.Interface {
       [BigNumberish, BigNumberish],
       BigNumberish[]
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "DEBUG_Reset",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "DEBUG_SetGameState",
@@ -207,7 +181,7 @@ export interface ZkWitchesInterface extends utils.Interface {
       [BigNumberish, BigNumberish],
       [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       [BigNumberish, BigNumberish],
-      BigNumberish[]
+      [BigNumberish, BigNumberish]
     ]
   ): string;
   encodeFunctionData(
@@ -216,28 +190,12 @@ export interface ZkWitchesInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "Surrender", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "getPlayer",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPlayerAddress",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getWitchAlive",
-    values: [ZkWitches.PlayerStateStruct, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "hc_verifierAddr",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "nw_verifierAddr",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "slotByAddress",
-    values: [string]
   ): string;
   encodeFunctionData(functionFragment: "tgs", values?: undefined): string;
   encodeFunctionData(
@@ -251,10 +209,6 @@ export interface ZkWitchesInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "ActionWithProof",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "DEBUG_Reset",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -276,25 +230,12 @@ export interface ZkWitchesInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "Surrender", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getPlayer", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "getPlayerAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getWitchAlive",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "hc_verifierAddr",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "nw_verifierAddr",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "slotByAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "tgs", data: BytesLike): Result;
@@ -350,10 +291,6 @@ export interface ZkWitches extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    DEBUG_Reset(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     DEBUG_SetGameState(
       inputTgs: ZkWitches.TotalGameStateStruct,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -379,7 +316,7 @@ export interface ZkWitches extends BaseContract {
       a: [BigNumberish, BigNumberish],
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
-      input: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -391,51 +328,15 @@ export interface ZkWitches extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    getPlayer(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[ZkWitches.PlayerStateStructOutput]>;
-
-    getPlayerAddress(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    getWitchAlive(
-      inputPlayer: ZkWitches.PlayerStateStruct,
-      witchType: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
-
     hc_verifierAddr(overrides?: CallOverrides): Promise<[string]>;
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<[string]>;
 
-    slotByAddress(a: string, overrides?: CallOverrides): Promise<[number]>;
-
     tgs(
       overrides?: CallOverrides
     ): Promise<
-      [
-        ZkWitches.SharedStateStructOutput,
-        string,
-        string,
-        string,
-        string,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput
-      ] & {
+      [ZkWitches.SharedStateStructOutput] & {
         shared: ZkWitches.SharedStateStructOutput;
-        address0: string;
-        address1: string;
-        address2: string;
-        address3: string;
-        player0: ZkWitches.PlayerStateStructOutput;
-        player1: ZkWitches.PlayerStateStructOutput;
-        player2: ZkWitches.PlayerStateStructOutput;
-        player3: ZkWitches.PlayerStateStructOutput;
       }
     >;
 
@@ -456,10 +357,6 @@ export interface ZkWitches extends BaseContract {
     b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
     c: [BigNumberish, BigNumberish],
     input: BigNumberish[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  DEBUG_Reset(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -488,7 +385,7 @@ export interface ZkWitches extends BaseContract {
     a: [BigNumberish, BigNumberish],
     b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
     c: [BigNumberish, BigNumberish],
-    input: BigNumberish[],
+    input: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -500,53 +397,11 @@ export interface ZkWitches extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  getPlayer(
-    slot: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<ZkWitches.PlayerStateStructOutput>;
-
-  getPlayerAddress(
-    slot: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  getWitchAlive(
-    inputPlayer: ZkWitches.PlayerStateStruct,
-    witchType: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<number>;
-
   hc_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
   nw_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
-  slotByAddress(a: string, overrides?: CallOverrides): Promise<number>;
-
-  tgs(
-    overrides?: CallOverrides
-  ): Promise<
-    [
-      ZkWitches.SharedStateStructOutput,
-      string,
-      string,
-      string,
-      string,
-      ZkWitches.PlayerStateStructOutput,
-      ZkWitches.PlayerStateStructOutput,
-      ZkWitches.PlayerStateStructOutput,
-      ZkWitches.PlayerStateStructOutput
-    ] & {
-      shared: ZkWitches.SharedStateStructOutput;
-      address0: string;
-      address1: string;
-      address2: string;
-      address3: string;
-      player0: ZkWitches.PlayerStateStructOutput;
-      player1: ZkWitches.PlayerStateStructOutput;
-      player2: ZkWitches.PlayerStateStructOutput;
-      player3: ZkWitches.PlayerStateStructOutput;
-    }
-  >;
+  tgs(overrides?: CallOverrides): Promise<ZkWitches.SharedStateStructOutput>;
 
   vm_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
@@ -567,8 +422,6 @@ export interface ZkWitches extends BaseContract {
       input: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<void>;
-
-    DEBUG_Reset(overrides?: CallOverrides): Promise<void>;
 
     DEBUG_SetGameState(
       inputTgs: ZkWitches.TotalGameStateStruct,
@@ -593,7 +446,7 @@ export interface ZkWitches extends BaseContract {
       a: [BigNumberish, BigNumberish],
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
-      input: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -601,53 +454,11 @@ export interface ZkWitches extends BaseContract {
 
     Surrender(overrides?: CallOverrides): Promise<void>;
 
-    getPlayer(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<ZkWitches.PlayerStateStructOutput>;
-
-    getPlayerAddress(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    getWitchAlive(
-      inputPlayer: ZkWitches.PlayerStateStruct,
-      witchType: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
     hc_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
-    slotByAddress(a: string, overrides?: CallOverrides): Promise<number>;
-
-    tgs(
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        ZkWitches.SharedStateStructOutput,
-        string,
-        string,
-        string,
-        string,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput,
-        ZkWitches.PlayerStateStructOutput
-      ] & {
-        shared: ZkWitches.SharedStateStructOutput;
-        address0: string;
-        address1: string;
-        address2: string;
-        address3: string;
-        player0: ZkWitches.PlayerStateStructOutput;
-        player1: ZkWitches.PlayerStateStructOutput;
-        player2: ZkWitches.PlayerStateStructOutput;
-        player3: ZkWitches.PlayerStateStructOutput;
-      }
-    >;
+    tgs(overrides?: CallOverrides): Promise<ZkWitches.SharedStateStructOutput>;
 
     vm_verifierAddr(overrides?: CallOverrides): Promise<string>;
   };
@@ -669,10 +480,6 @@ export interface ZkWitches extends BaseContract {
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
       input: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    DEBUG_Reset(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -699,7 +506,7 @@ export interface ZkWitches extends BaseContract {
       a: [BigNumberish, BigNumberish],
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
-      input: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -711,27 +518,9 @@ export interface ZkWitches extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    getPlayer(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getPlayerAddress(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getWitchAlive(
-      inputPlayer: ZkWitches.PlayerStateStruct,
-      witchType: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     hc_verifierAddr(overrides?: CallOverrides): Promise<BigNumber>;
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<BigNumber>;
-
-    slotByAddress(a: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     tgs(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -753,10 +542,6 @@ export interface ZkWitches extends BaseContract {
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
       input: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    DEBUG_Reset(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -783,7 +568,7 @@ export interface ZkWitches extends BaseContract {
       a: [BigNumberish, BigNumberish],
       b: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
       c: [BigNumberish, BigNumberish],
-      input: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -795,30 +580,9 @@ export interface ZkWitches extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    getPlayer(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getPlayerAddress(
-      slot: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getWitchAlive(
-      inputPlayer: ZkWitches.PlayerStateStruct,
-      witchType: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     hc_verifierAddr(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    slotByAddress(
-      a: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     tgs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
