@@ -1,9 +1,9 @@
 import { BigNumberish, ethers } from "ethers";
-import zkWitchesArtifact from './artifacts/zkWitches.json';
-import { ZkWitches } from './artifacts/ZkWitches_ABI_Types' 
+import zkWitchesArtifact from '../import/zkWitches.json';
+import { ZkWitches } from '../import/ZkWitches' 
 import { targetChain } from "./chainInfo";
 
-import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToFlatStruct_TGS, FromFlatStruct_TGS, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
+import { ActionInfo, DefaultTGS, IZKBackend, PlayerGameState, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 
@@ -88,7 +88,7 @@ async function GetTgs() : Promise<TotalGameState>
         throw "undefined return value";
     }
 
-    return FromFlatStruct_TGS(flat);
+    return flat;
 }
 
 async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
@@ -202,7 +202,7 @@ async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actio
 
 async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void> 
 {
-    let hasWitch : boolean = priv.witches[tgs.shared.accusationWitchType] == 1;
+    let hasWitch : boolean = priv.witches[tgs.shared.accusationWitchType as number] == 1;
 
     if (!hasWitch) 
     {
@@ -223,7 +223,7 @@ async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo) : Pro
     let witness = await generateWitness(NoWitchWASM, NoWitchZkey, noWitchWitnessParams);
     let errorMsg;
 
-    let txn = await zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, witness.inputs) // TODO Review
+    let txn = await zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]]) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {
@@ -325,9 +325,7 @@ async function SetTgs(new_tgs: TotalGameState) : Promise<void>
     await connectContract();
     let errorMsg;
 
-    let flat = ToFlatStruct_TGS(new_tgs);
-
-    let txn = await zkWitches.DEBUG_SetGameState(flat) // TODO Review
+    let txn = await zkWitches.DEBUG_SetGameState(new_tgs) // TODO Review
         .catch((error: any) => {
             console.log(error);
             if (error.reason) {

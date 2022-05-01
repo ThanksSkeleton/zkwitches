@@ -33,7 +33,7 @@ function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, p
   }
   else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING) 
   {
-    if (tgs.playerAddresses.indexOf(myAddress) == -1) 
+    if (tgs.addresses.indexOf(myAddress) == -1) 
     {
       return UIState.CitizenSelector;
     } else {
@@ -287,7 +287,7 @@ function ActivePlayer(props: MyActionProps)
     <Stack direction="row"
     spacing = {1}>
       <TextField label={"Player " + props.priv.slot + " (You)"} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.tgs.players[props.priv.slot].food} lumber={props.tgs.players[props.priv.slot].lumber} />
+      <ResourceIndicator food={props.tgs.players[props.priv.slot].food as number} lumber={props.tgs.players[props.priv.slot].lumber as number} />
       <ActionTableau type={0} actionProps={props} />
       <ActionTableau type={1} actionProps={props} />
     </Stack>
@@ -306,7 +306,7 @@ function EnemyPlayer(props: EnemyProps)
     <Stack direction="row"
     spacing = {1}>
       <TextField label={"Player " + props.enemyPlayerId} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.actionProps.tgs.players[props.enemyPlayerId].food} lumber={props.actionProps.tgs.players[props.enemyPlayerId].lumber} />
+      <ResourceIndicator food={props.actionProps.tgs.players[props.enemyPlayerId].food as number} lumber={props.actionProps.tgs.players[props.enemyPlayerId].lumber as number} />
       <ActionTableau type={2} target={props.enemyPlayerId} actionProps={props.actionProps} />
       <ActionTableau type={3} target={props.enemyPlayerId} witchType={0} actionProps={props.actionProps} />
       <ActionTableau type={3} target={props.enemyPlayerId} witchType={1} actionProps={props.actionProps} />
@@ -361,7 +361,7 @@ function ActionTableau(props: TableauProps) {
 
   function HaveCitizens(priv: PrivatePlayerInfo, tgs: TotalGameState, citizen_type: number, count_required: number ) : boolean 
   {
-    return (priv.citizens[citizen_type] >= count_required || (priv.witches[citizen_type] == 1 && tgs.players[priv.slot].WitchAlive[citizen_type] == 1))
+    return (priv.citizens[citizen_type] >= count_required || (priv.witches[citizen_type] == 1 && tgs.players[priv.slot].WitchAlive[citizen_type]))
   } 
 
   function HasFoodAndLumber(tgs: TotalGameState,  food_req: number, lumber_req: number, playerId?: number) : boolean 
@@ -374,7 +374,7 @@ function ActionTableau(props: TableauProps) {
   {
     if ( playerId == undefined ) return false;  
     if ( witch_type == undefined ) return false;  
-    return (tgs.players[playerId].WitchAlive[witch_type] == 1); 
+    return (tgs.players[playerId].WitchAlive[witch_type]); 
   }
 
   let priv = props.actionProps.priv;
