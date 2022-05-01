@@ -78,7 +78,7 @@ function Test_UserPlayer() : PlayerGameState
     return <PlayerGameState> 
     {
         isAlive: true,
-        handCommitment : "9230182617660605374415851193724903651342296183907450604039318143940998878483",
+        handCommitment : "250494017945128099137172715300877349886951345608512250505894554758779604241",
         food: 0,
         lumber: 0,
         WitchAlive: [true,true,true,true]
@@ -123,8 +123,6 @@ export type PrivatePlayerInfo =
 {
     slot: number
 
-    address: string
-
     salt: string
 
     citizens: number[]
@@ -136,8 +134,7 @@ export function DefaultPPI() : PrivatePlayerInfo
     return <PrivatePlayerInfo> 
     {
         slot: 0,
-        address: "Random",
-        salt: "foo",
+        salt: "1157920892373161954235709850086879078532699846656405640394575840791312963995",
         citizens: [0, 1, 2, 3],
         witches: [0, 1, 0, 0]
     }
@@ -148,8 +145,7 @@ export function Empty(address: string) : PrivatePlayerInfo
     return <PrivatePlayerInfo> 
     {
         slot: 0,
-        address: address,
-        salt: "0",
+        salt: "1157920892373161954235709850086879078532699846656405640394575840791312963995",
         citizens: [0, 0, 0, 0],
         witches: [0, 0, 0, 0]
     }
