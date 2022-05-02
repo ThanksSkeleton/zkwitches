@@ -32,6 +32,7 @@ export declare namespace ZkWitches {
     previous_action_game_block: BigNumberish;
     current_block: BigNumberish;
     current_sequence_number: BigNumberish;
+    currentGameCount: BigNumberish;
   };
 
   export type SharedStateStructOutput = [
@@ -40,6 +41,7 @@ export declare namespace ZkWitches {
     number,
     number,
     number,
+    BigNumber,
     BigNumber,
     BigNumber,
     BigNumber
@@ -52,6 +54,7 @@ export declare namespace ZkWitches {
     previous_action_game_block: BigNumber;
     current_block: BigNumber;
     current_sequence_number: BigNumber;
+    currentGameCount: BigNumber;
   };
 
   export type PlayerStateStruct = {
@@ -112,7 +115,7 @@ export interface ZkWitchesInterface extends utils.Interface {
   functions: {
     "ActionNoProof(uint8,uint8,uint8)": FunctionFragment;
     "ActionWithProof(uint8,uint8,uint256[2],uint256[2][2],uint256[2],uint256[7])": FunctionFragment;
-    "DEBUG_SetGameState(((uint8,uint8,uint8,uint8,uint8,uint256,uint256,uint256),address[4],tuple[4]))": FunctionFragment;
+    "DEBUG_SetGameState(((uint8,uint8,uint8,uint8,uint8,uint256,uint256,uint256,int256),address[4],tuple[4]))": FunctionFragment;
     "GetTGS()": FunctionFragment;
     "JoinGame(uint256[2],uint256[2][2],uint256[2],uint256[1])": FunctionFragment;
     "KickCurrentPlayer()": FunctionFragment;

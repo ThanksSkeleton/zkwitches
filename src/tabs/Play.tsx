@@ -364,10 +364,10 @@ function ActionTableau(props: TableauProps) {
     return (priv.citizens[citizen_type] >= count_required || (priv.witches[citizen_type] == 1 && tgs.players[priv.slot].WitchAlive[citizen_type]))
   } 
 
-  function HasFoodAndLumber(tgs: TotalGameState,  food_req: number, lumber_req: number, playerId?: number) : boolean 
+  function HasFoodAndLumber(tgs: TotalGameState, fl: FoodAndLumber, playerId?: number) : boolean 
   {
     if ( playerId == undefined ) return false;  
-    return (tgs.players[playerId].food >= food_req && tgs.players[playerId].lumber >= lumber_req);
+    return (tgs.players[playerId].food >= fl[0] && tgs.players[playerId].lumber >= fl[1]);
   }
 
   function WitchAlive(tgs: TotalGameState, playerId?: number, witch_type?: number) : boolean 
@@ -382,17 +382,23 @@ function ActionTableau(props: TableauProps) {
 
   // TODO super ugly
 
+  type FoodAndLumber = number[];
+
+  let brigandTrades = [[2,0], [0,2]];
+  let stealAmounts = [[0,1], [1,0], [0,1], [1,0]];
+  let inquisitionCosts = [[3,3], [2,2], [1,1]];
+
   let enabled_grid = 
   [
     [HaveCitizens(priv, tgs, 0, 0), HaveCitizens(priv, tgs, 0, 1), HaveCitizens(priv, tgs, 0, 2), HaveCitizens(priv, tgs, 0, 3)],
     [HaveCitizens(priv, tgs, 1, 0), HaveCitizens(priv, tgs, 1, 1), HaveCitizens(priv, tgs, 1, 2), HaveCitizens(priv, tgs, 1, 3)],
-    [HaveCitizens(priv, tgs, 2, 0) && HasFoodAndLumber(tgs, 2, 0, priv.slot) && HasFoodAndLumber(tgs, 0, 1, props.target,), 
-     HaveCitizens(priv, tgs, 2, 1) && HasFoodAndLumber(tgs, 0, 2, priv.slot) && HasFoodAndLumber(tgs, 1, 0, props.target,),
-     HaveCitizens(priv, tgs, 2, 2) && HasFoodAndLumber(tgs, 0, 1, props.target), 
-     HaveCitizens(priv, tgs, 2, 3) && HasFoodAndLumber(tgs, 1, 0, props.target)], 
-     [HaveCitizens(priv, tgs, 3, 0) && HasFoodAndLumber(tgs, 3, 3, priv.slot) && WitchAlive(tgs, props.target, props.witchType), 
-      HaveCitizens(priv, tgs, 3, 1) && HasFoodAndLumber(tgs, 2, 2, priv.slot) && WitchAlive(tgs, props.target, props.witchType),
-      HaveCitizens(priv, tgs, 3, 2) && HasFoodAndLumber(tgs, 1, 1, priv.slot) && WitchAlive(tgs, props.target, props.witchType),
+    [HaveCitizens(priv, tgs, 2, 0) && HasFoodAndLumber(tgs, brigandTrades[0], priv.slot) && HasFoodAndLumber(tgs, stealAmounts[0], props.target,), 
+     HaveCitizens(priv, tgs, 2, 1) && HasFoodAndLumber(tgs, brigandTrades[1], priv.slot) && HasFoodAndLumber(tgs, stealAmounts[1], props.target,),
+     HaveCitizens(priv, tgs, 2, 2) && HasFoodAndLumber(tgs, stealAmounts[2], props.target), 
+     HaveCitizens(priv, tgs, 2, 3) && HasFoodAndLumber(tgs, stealAmounts[3], props.target)], 
+     [HaveCitizens(priv, tgs, 3, 0) && HasFoodAndLumber(tgs, inquisitionCosts[0], priv.slot) && WitchAlive(tgs, props.target, props.witchType), 
+      HaveCitizens(priv, tgs, 3, 1) && HasFoodAndLumber(tgs, inquisitionCosts[1], priv.slot) && WitchAlive(tgs, props.target, props.witchType),
+      HaveCitizens(priv, tgs, 3, 2) && HasFoodAndLumber(tgs, inquisitionCosts[2], priv.slot) && WitchAlive(tgs, props.target, props.witchType),
       HaveCitizens(priv, tgs, 3, 3) && WitchAlive(tgs, props.target, props.witchType)]
     ];
 
