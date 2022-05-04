@@ -62,6 +62,8 @@ const ActionZKey : string = "/ValidMove/circuit_final.zkey";
 const NoWitchWASM : string = "/NoWitch/NoWitch.wasm";
 const NoWitchZkey: string = "/NoWitch/circuit_final.zkey";
 
+
+
 async function GetTgs() : Promise<TotalGameState> 
 {
     await connectContract();
@@ -93,28 +95,22 @@ async function GetTgs() : Promise<TotalGameState>
 
 async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
 {
-    await connectContract();
-    let witness = await generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv));
-    let errorMsg;
-
-    let txn = await zkWitches.JoinGame(witness.a, witness.b, witness.c, [witness.inputs[0]]) // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv))).
+    then(witness => zkWitches.JoinGame(witness.a, witness.b, witness.c, [witness.inputs[0]])).
+    then(txn => txn.wait()).
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 
     console.log("Successfully Performed Proof-Based Join!")
 }
@@ -132,72 +128,46 @@ async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: 
 }
 
 async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
-{
-    await connectContract();
-    
-    // {
-    //     "CitizenCount" : [ 0, 1, 2, 3 ],
-    //     "WitchPresent" : [ 0, 1, 0, 0 ],
-    //     "HandSalt" : 0,
-    //     "ExpectedHash" : "9230182617660605374415851193724903651342296183907450604039318143940998878483",
-    //     "WitchAlive": [ 1, 1, 1, 1 ],
-    //     "citizenType": 3,
-    //     "requiredCitizenCount" : 3
-    // }
-
+{    
     let actionWitnessParams = ToValidMoveParameters(priv, tgs, actionInfo.type, level);
 
-    let witness = await generateWitness(ActionWASM, ActionZKey, actionWitnessParams); 
-    let errorMsg;
-
-    let txn = await zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs) // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => generateWitness(ActionWASM, ActionZKey, actionWitnessParams)).
+    then(witness => zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs)).
+    then(txn => txn.wait()).
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 
     console.log("Successfully Performed Proof-Based Action!")
 }
 
 async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
 {
-    await connectContract();
-
-    let errorMsg;
-
-    console.log("action: ", actionInfo);
-
-    let txn = await zkWitches.ActionNoProof(actionInfo.type, actionInfo.target ?? 0, actionInfo.witchType ?? 0) // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => zkWitches.ActionNoProof(actionInfo.type, actionInfo.target ?? 0, actionInfo.witchType ?? 0)).
+    then(txn => txn.wait()).
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 }
 
 async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void> 
@@ -215,134 +185,103 @@ async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promis
 }
 
 async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void>
-{
-    await connectContract();
-
+{    
     let noWitchWitnessParams = ToNoWitchParameters(priv, tgs);
 
-    let witness = await generateWitness(NoWitchWASM, NoWitchZkey, noWitchWitnessParams);
-    let errorMsg;
-
-    let txn = await zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]]) // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => generateWitness(NoWitchWASM, NoWitchZkey, noWitchWitnessParams)).
+    then(witness => zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]])).
+    then(txn => txn.wait()). 
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 
     console.log("Successfully Performed Proof-Based Accusation Response!")
 }
 
 async function WitchProof_Yes() : Promise<void>
 {
-    await connectContract();
-    let errorMsg;
-
-    let txn = await zkWitches.RespondAccusation_YesWitch() // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => zkWitches.RespondAccusation_YesWitch()).
+    then(txn => txn.wait()). 
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 }
 
 async function Surrender() : Promise<void>
 {
-    await connectContract();
-    let errorMsg;
-
-    let txn = await zkWitches.Surrender() // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => zkWitches.Surrender()).
+    then(txn => txn.wait()). 
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 }
 
 async function KickActivePlayer() : Promise<void>
 {
-    await connectContract();
-    let errorMsg;
-
-    let txn = await zkWitches.KickCurrentPlayer() // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => zkWitches.KickCurrentPlayer()).
+    then(txn => txn.wait()). 
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 }
 
 async function SetTgs(new_tgs: TotalGameState) : Promise<void>
 {
-    await connectContract();
-    let errorMsg;
-
-    let txn = await zkWitches.DEBUG_SetGameState(new_tgs) // TODO Review
-        .catch((error: any) => {
-            console.log(error);
-            if (error.reason) {
-                errorMsg = error.reason;
-            } else if (error.data.message) {
-                errorMsg = error.data.message;
-            } else {
-                errorMsg = "Unknown error."
-            }
-        });
-
-    console.log("transaction: ", txn);
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
+    await connectContract().
+    then(() => zkWitches.DEBUG_SetGameState(new_tgs)).
+    then(txn => txn.wait()). 
+    catch((error: any) => {
+        let errorMsg : string;
+        if (error.reason) {
+            errorMsg = error.reason;
+        } else if (error.data.message) {
+            errorMsg = error.data.message;
+        } else {
+            errorMsg = "Unknown error."
+        }
+        console.log(error);
         throw errorMsg;
-    }
+    });
 }
 
 export class ZKBackend implements IZKBackend 
