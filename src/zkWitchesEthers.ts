@@ -62,231 +62,148 @@ const ActionZKey : string = "/ValidMove/circuit_final.zkey";
 const NoWitchWASM : string = "/NoWitch/NoWitch.wasm";
 const NoWitchZkey: string = "/NoWitch/circuit_final.zkey";
 
-
-
-async function GetTgs() : Promise<TotalGameState> 
+function errorHandler(error: any) : PromiseLike<never> 
 {
-    await connectContract();
-
-    let errorMsg;   
-
-    let flat = await zkWitches.GetTGS().catch((error: any) => {
-        console.log(error);
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-    });
-
-    if (errorMsg) {
-        //console.log("error: ", errorMsg);
-        throw errorMsg;
-    } 
-    else if (!flat) 
-    {
-        throw "undefined return value";
+    let errorMsg : string;
+    if (error.reason) {
+        errorMsg = error.reason;
+    } else if (error.data.message) {
+        errorMsg = error.data.message;
+    } else {
+        errorMsg = "Unknown error."
     }
-
-    return flat;
+    console.log(error);
+    throw errorMsg;
 }
 
-async function JoinGame(priv: PrivatePlayerInfo) : Promise<void>
+async function GetTgs(setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState> 
 {
-    await connectContract().
-    then(() => generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv))).
-    then(witness => zkWitches.JoinGame(witness.a, witness.b, witness.c, [witness.inputs[0]])).
-    then(txn => txn.wait()).
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
-
-    console.log("Successfully Performed Proof-Based Join!")
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Calling API")).then(() => zkWitches.GetTGS()).
+    finally(() => setLoading(false));
 }
 
-async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
+async function JoinGame(priv: PrivatePlayerInfo, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
+{
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Generating witness")).then(() => generateWitness(JoinWASM, JoinZKey, ToJoinParameters(priv))).
+    then(witness => { setLoadingString("Calling API"); return witness; }).then(witness => zkWitches.JoinGame(witness.a, witness.b, witness.c, [witness.inputs[0]])).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).
+    catch(errorHandler).
+    finally(() => setLoading(false));
+}
+
+async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) :  Promise<TotalGameState>
 {
     if (level != 0) 
     {
-        return Action_Complex(tgs, priv, actionInfo, level);
+        return Action_Complex(tgs, priv, actionInfo, level, setLoading, setLoadingString);
     } 
     else 
     {
-        return Action_Simple(tgs, priv, actionInfo);
+        return Action_Simple(actionInfo, setLoading, setLoadingString);
     }
 }
 
-async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number) : Promise<void>
+async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) :  Promise<TotalGameState>
 {    
-    let actionWitnessParams = ToValidMoveParameters(priv, tgs, actionInfo.type, level);
-
-    await connectContract().
-    then(() => generateWitness(ActionWASM, ActionZKey, actionWitnessParams)).
-    then(witness => zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs)).
-    then(txn => txn.wait()).
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
-
-    console.log("Successfully Performed Proof-Based Action!")
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Generating witness")).then(() => generateWitness(ActionWASM, ActionZKey, ToValidMoveParameters(priv, tgs, actionInfo.type, level))).
+    then(witness => { setLoadingString("Calling API"); return witness; }).then(witness => zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs)).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function Action_Simple(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo) : Promise<void>
+async function Action_Simple(actionInfo: ActionInfo, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
-    await connectContract().
-    then(() => zkWitches.ActionNoProof(actionInfo.type, actionInfo.target ?? 0, actionInfo.witchType ?? 0)).
-    then(txn => txn.wait()).
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(witness => { setLoadingString("Calling API"); return witness; }).then(() => zkWitches.ActionNoProof(actionInfo.type, actionInfo.target ?? 0, actionInfo.witchType ?? 0)).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void> 
+async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
     let hasWitch : boolean = priv.witches[tgs.shared.accusationWitchType as number] == 1;
 
     if (!hasWitch) 
     {
-        return WitchProof_No(tgs, priv);
+        return WitchProof_No(tgs, priv, setLoading, setLoadingString);
     } 
     else 
     {
-        return WitchProof_Yes();
+        return WitchProof_Yes(setLoading, setLoadingString);
     }
 }
 
-async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo) : Promise<void>
+async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {    
-    let noWitchWitnessParams = ToNoWitchParameters(priv, tgs);
-
-    await connectContract().
-    then(() => generateWitness(NoWitchWASM, NoWitchZkey, noWitchWitnessParams)).
-    then(witness => zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]])).
-    then(txn => txn.wait()). 
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
-
-    console.log("Successfully Performed Proof-Based Accusation Response!")
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Generating witness")).then(() => generateWitness(NoWitchWASM, NoWitchZkey, ToNoWitchParameters(priv, tgs))).
+    then(witness => { setLoadingString("Calling API"); return witness; }).then(witness => zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]])).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()). 
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function WitchProof_Yes() : Promise<void>
+async function WitchProof_Yes(setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
-    await connectContract().
-    then(() => zkWitches.RespondAccusation_YesWitch()).
-    then(txn => txn.wait()). 
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Calling API")).then(() => zkWitches.RespondAccusation_YesWitch()).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).  
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function Surrender() : Promise<void>
+async function Surrender(setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
-    await connectContract().
-    then(() => zkWitches.Surrender()).
-    then(txn => txn.wait()). 
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Calling API")).then(() => zkWitches.Surrender()).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).  
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function KickActivePlayer() : Promise<void>
+async function KickActivePlayer(setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
-    await connectContract().
-    then(() => zkWitches.KickCurrentPlayer()).
-    then(txn => txn.wait()). 
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Calling API")).then(() => zkWitches.KickCurrentPlayer()).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).  
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
-async function SetTgs(new_tgs: TotalGameState) : Promise<void>
+async function SetTgs(new_tgs: TotalGameState, setLoading: (x : boolean) => void, setLoadingString: (x : string) => void ) : Promise<TotalGameState>
 {
-    await connectContract().
-    then(() => zkWitches.DEBUG_SetGameState(new_tgs)).
-    then(txn => txn.wait()). 
-    catch((error: any) => {
-        let errorMsg : string;
-        if (error.reason) {
-            errorMsg = error.reason;
-        } else if (error.data.message) {
-            errorMsg = error.data.message;
-        } else {
-            errorMsg = "Unknown error."
-        }
-        console.log(error);
-        throw errorMsg;
-    });
+    return await new Promise((resolve, reject) => { setLoading(true); return resolve; } ).then(() => setLoadingString("Connecting To Contract")).then(() => connectContract()).
+    then(() => setLoadingString("Calling API")).then(() => zkWitches.DEBUG_SetGameState(new_tgs)).
+    then(txn => { setLoadingString("Waiting for transaction to process"); return txn }).then(txn => txn.wait()).
+    then(() => setLoadingString("Fetching new state")).then(() => zkWitches.GetTGS()).  
+    catch(errorHandler).
+    finally(() => setLoading(false));
 }
 
 export class ZKBackend implements IZKBackend 
 {
+    private setLoading : (x : boolean) => void;
+    private setLoadingString : (x : string) => void;
+
     private tgs?: TotalGameState;
+
+    constructor(setLoadingIn: (x : boolean) => void, setLoadingStringIn: (x : string) => void) 
+    {
+        this.setLoading = setLoadingIn;
+        this.setLoadingString = setLoadingStringIn;
+    }
 
     GetTotalGameState(): TotalGameState | undefined 
     {
@@ -295,43 +212,36 @@ export class ZKBackend implements IZKBackend
 
     async RefreshStatus(): Promise<void> 
     {
-        this.tgs = await GetTgs();
-        console.log(this.tgs);
+        this.tgs = await GetTgs(this.setLoading, this.setLoadingString);
     }
 
     async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
     {
-        await JoinGame(priv);
-        await this.RefreshStatus();
+        this.tgs = await JoinGame(priv, this.setLoading, this.setLoadingString);
     }
 
     async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
     {
-        await Action(this.tgs as TotalGameState, priv, action, level);
-        await this.RefreshStatus();
+        this.tgs = await Action(this.tgs as TotalGameState, priv, action, level, this.setLoading, this.setLoadingString);
     }
 
     async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
     {
-        await WitchProof(this.tgs as TotalGameState, priv);
-        await this.RefreshStatus();    
+        this.tgs = await WitchProof(this.tgs as TotalGameState, priv, this.setLoading, this.setLoadingString);
     }
 
     async Surrender(): Promise<void> 
     {
-        await Surrender();
-        await this.RefreshStatus();
+        this.tgs = await Surrender(this.setLoading, this.setLoadingString);
     }
 
     async KickActivePlayer(): Promise<void> 
     {
-        await KickActivePlayer();
-        await this.RefreshStatus();
+        this.tgs = await KickActivePlayer(this.setLoading, this.setLoadingString);
     }
 
     async DebugSetTotalGameState(tgs_input: TotalGameState): Promise<void> 
     {
-        await SetTgs(tgs_input);
-        await this.RefreshStatus();
+        this.tgs = await SetTgs(tgs_input, this.setLoading, this.setLoadingString);
     }
 }

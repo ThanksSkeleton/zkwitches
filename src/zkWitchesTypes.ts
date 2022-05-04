@@ -18,7 +18,6 @@ export enum GameStateEnum
     GAME_STARTING,
     WAITING_FOR_PLAYER_TURN,
     WAITING_FOR_PLAYER_ACCUSATION_RESPONSE,
-    GAME_OVER
 }
 
 const bogusAddress1 = "0xdd3fd4581271e230360230f9337d5c0430bf44c0"
@@ -118,6 +117,34 @@ export function RespondToAccusationTGS(actualAddress: string) : TotalGameState
         addresses: [actualAddress, bogusAddress2, bogusAddress3, bogusAddress4],
         players: [Test_UserPlayer(), Test_BogusPlayer(1), Test_BogusPlayer(2), Test_BogusPlayer(3)]
     };}
+
+export function TwoPlayerGame(actualAddress: string) : TotalGameState 
+{
+    let dead2 = Test_BogusPlayer(2);
+    dead2.isAlive = false;
+    let dead3 = Test_BogusPlayer(3);
+    dead3.isAlive = false;
+
+    return <TotalGameState>
+    {
+        shared :
+        {
+            stateEnum: GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE,
+            playerSlotWaiting: 0,
+            currentNumberOfPlayers: 4,
+            playerAccusing: 1,
+            accusationWitchType: 0,
+
+            // TODO BOGUS
+            previous_action_game_block:  BigNumber.from(0),
+            current_block: BigNumber.from(0),
+
+            current_sequence_number: BigNumber.from(0)      
+        },
+        addresses: [actualAddress, bogusAddress2, bogusAddress3, bogusAddress4],
+        players: [Test_UserPlayer(), Test_BogusPlayer(1), dead2, dead3]
+    };
+}
 
 export type PrivatePlayerInfo =
 {
@@ -250,79 +277,4 @@ export class EmptyZKBackend implements IZKBackend
         this.tgs = tgsinput;
         return this.RefreshStatus();
     }
-}
-
-export class WrappedZKBackend implements IZKBackend 
-{
-    private innerZKB : IZKBackend;
-    private lb : (value: React.SetStateAction<boolean>) => void;
-    private ls : (value: React.SetStateAction<string>) => void;
-
-    constructor(inner: IZKBackend, loadingBool: (value: React.SetStateAction<boolean>) => void, loadingString: (value: React.SetStateAction<string>) => void)
-    {
-        this.innerZKB = inner;
-        this.lb = loadingBool;
-        this.ls = loadingString;
-    }
-
-    GetTotalGameState(): TotalGameState | undefined 
-    {
-        return this.innerZKB.GetTotalGameState();
-    }
-
-    async RefreshStatus(): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Refreshing Status...");
-        await this.innerZKB.RefreshStatus();
-        this.lb(false);
-    }
-
-    async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Joining Game...");
-        await this.innerZKB.JoinGame(priv);
-        this.lb(false);    
-    }
-
-    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Performing Action...");
-        await this.innerZKB.DoAction(priv, action, level);
-        this.lb(false);        
-    }
-
-    async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Responding to Accusation...");
-        await this.innerZKB.RespondToAccusation(priv);
-        this.lb(false);       
-    }
-
-    async Surrender(): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Surrendering...");
-        await this.innerZKB.Surrender();
-        this.lb(false);         }
-
-    async KickActivePlayer(): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("Kicking Active Player...");
-        await this.innerZKB.KickActivePlayer();
-        this.lb(false);     
-    }
-
-    async DebugSetTotalGameState(tgs: TotalGameState): Promise<void> 
-    {
-        this.lb(true);
-        this.ls("DEBUG: Setting game state...");
-        await this.innerZKB.DebugSetTotalGameState(tgs);
-        this.lb(false);         
-    }
-
 }

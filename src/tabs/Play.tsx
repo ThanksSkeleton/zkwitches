@@ -6,7 +6,7 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, EmptyZKBackend, ActionInfo, WrappedZKBackend, Total, StartActionTGS, RespondToAccusationTGS } from "../zkWitchesTypes";
+import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS } from "../zkWitchesTypes";
 import { ZKBackend, signerAddress } from "../zkWitchesEthers";
 
 enum UIState 
@@ -57,8 +57,6 @@ function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, p
     } else {
       return UIState.OtherTurn;
     }
-  } else if (tgs.shared.stateEnum == GameStateEnum.GAME_OVER) {
-    return UIState.GameOver;
   } else {
     throw("Unknown State");
   }
@@ -70,7 +68,7 @@ export default function Play()
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingString, setLoadingString] = useState<string>("");
 
-  const [backend] = useState<IZKBackend>(new WrappedZKBackend(new ZKBackend(), setIsLoading, setLoadingString));
+  const [backend] = useState<IZKBackend>(new ZKBackend(setIsLoading, setLoadingString));
 
   let state : UIState = GetUIState(isLoading, "fake", backend.GetTotalGameState(), priv);
 
