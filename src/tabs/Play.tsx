@@ -384,9 +384,9 @@ function ActionTableau(props: TableauProps) {
 
   type FoodAndLumber = number[];
 
-  let brigandTrades = [[2,0], [0,2]];
+  let brigandTrades = [[2,0], [0,2], [0,0], [0,0]];
   let stealAmounts = [[0,1], [1,0], [0,1], [1,0]];
-  let inquisitionCosts = [[3,3], [2,2], [1,1]];
+  let inquisitionCosts = [[3,3], [2,2], [1,1], [0,0]];
 
   let enabled_grid = 
   [
