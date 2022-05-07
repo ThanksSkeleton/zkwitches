@@ -276,19 +276,36 @@ export interface ZkWitchesInterface extends utils.Interface {
   ): Result;
 
   events: {
-    "Action(int256,address,uint8,uint8,uint8,uint8,uint8)": EventFragment;
-    "GameStart(int256)": EventFragment;
-    "Join(int256,address,uint8)": EventFragment;
+    "AccusationResponse(int256,address,uint8,bool,uint256)": EventFragment;
+    "Action(int256,address,uint8,uint8,uint8,uint8,uint8,uint256)": EventFragment;
+    "GameStart(int256,uint256)": EventFragment;
+    "Join(int256,address,uint8,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "VictoryLoss(int256,address,uint8,uint8)": EventFragment;
+    "VictoryLoss(int256,address,uint8,uint8,uint256)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AccusationResponse"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Action"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "GameStart"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Join"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "VictoryLoss"): EventFragment;
 }
+
+export interface AccusationResponseEventObject {
+  gameId: BigNumber;
+  player: string;
+  slot: number;
+  innocent: boolean;
+  timeStamp: BigNumber;
+}
+export type AccusationResponseEvent = TypedEvent<
+  [BigNumber, string, number, boolean, BigNumber],
+  AccusationResponseEventObject
+>;
+
+export type AccusationResponseEventFilter =
+  TypedEventFilter<AccusationResponseEvent>;
 
 export interface ActionEventObject {
   gameId: BigNumber;
@@ -298,9 +315,10 @@ export interface ActionEventObject {
   target: number;
   witchType: number;
   actionLevel: number;
+  timeStamp: BigNumber;
 }
 export type ActionEvent = TypedEvent<
-  [BigNumber, string, number, number, number, number, number],
+  [BigNumber, string, number, number, number, number, number, BigNumber],
   ActionEventObject
 >;
 
@@ -308,8 +326,12 @@ export type ActionEventFilter = TypedEventFilter<ActionEvent>;
 
 export interface GameStartEventObject {
   gameId: BigNumber;
+  timeStamp: BigNumber;
 }
-export type GameStartEvent = TypedEvent<[BigNumber], GameStartEventObject>;
+export type GameStartEvent = TypedEvent<
+  [BigNumber, BigNumber],
+  GameStartEventObject
+>;
 
 export type GameStartEventFilter = TypedEventFilter<GameStartEvent>;
 
@@ -317,9 +339,10 @@ export interface JoinEventObject {
   gameId: BigNumber;
   player: string;
   slot: number;
+  timeStamp: BigNumber;
 }
 export type JoinEvent = TypedEvent<
-  [BigNumber, string, number],
+  [BigNumber, string, number, BigNumber],
   JoinEventObject
 >;
 
@@ -342,9 +365,10 @@ export interface VictoryLossEventObject {
   player: string;
   slot: number;
   victoryLossType: number;
+  timeStamp: BigNumber;
 }
 export type VictoryLossEvent = TypedEvent<
-  [BigNumber, string, number, number],
+  [BigNumber, string, number, number, BigNumber],
   VictoryLossEventObject
 >;
 
@@ -598,14 +622,30 @@ export interface ZkWitches extends BaseContract {
   };
 
   filters: {
-    "Action(int256,address,uint8,uint8,uint8,uint8,uint8)"(
+    "AccusationResponse(int256,address,uint8,bool,uint256)"(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      innocent?: null,
+      timeStamp?: null
+    ): AccusationResponseEventFilter;
+    AccusationResponse(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      innocent?: null,
+      timeStamp?: null
+    ): AccusationResponseEventFilter;
+
+    "Action(int256,address,uint8,uint8,uint8,uint8,uint8,uint256)"(
       gameId?: BigNumberish | null,
       player?: string | null,
       slot?: null,
       actionType?: null,
       target?: null,
       witchType?: null,
-      actionLevel?: null
+      actionLevel?: null,
+      timeStamp?: null
     ): ActionEventFilter;
     Action(
       gameId?: BigNumberish | null,
@@ -614,21 +654,30 @@ export interface ZkWitches extends BaseContract {
       actionType?: null,
       target?: null,
       witchType?: null,
-      actionLevel?: null
+      actionLevel?: null,
+      timeStamp?: null
     ): ActionEventFilter;
 
-    "GameStart(int256)"(gameId?: BigNumberish | null): GameStartEventFilter;
-    GameStart(gameId?: BigNumberish | null): GameStartEventFilter;
+    "GameStart(int256,uint256)"(
+      gameId?: BigNumberish | null,
+      timeStamp?: null
+    ): GameStartEventFilter;
+    GameStart(
+      gameId?: BigNumberish | null,
+      timeStamp?: null
+    ): GameStartEventFilter;
 
-    "Join(int256,address,uint8)"(
+    "Join(int256,address,uint8,uint256)"(
       gameId?: BigNumberish | null,
       player?: string | null,
-      slot?: null
+      slot?: null,
+      timeStamp?: null
     ): JoinEventFilter;
     Join(
       gameId?: BigNumberish | null,
       player?: string | null,
-      slot?: null
+      slot?: null,
+      timeStamp?: null
     ): JoinEventFilter;
 
     "OwnershipTransferred(address,address)"(
@@ -640,17 +689,19 @@ export interface ZkWitches extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "VictoryLoss(int256,address,uint8,uint8)"(
+    "VictoryLoss(int256,address,uint8,uint8,uint256)"(
       gameId?: BigNumberish | null,
       player?: string | null,
       slot?: null,
-      victoryLossType?: null
+      victoryLossType?: null,
+      timeStamp?: null
     ): VictoryLossEventFilter;
     VictoryLoss(
       gameId?: BigNumberish | null,
       player?: string | null,
       slot?: null,
-      victoryLossType?: null
+      victoryLossType?: null,
+      timeStamp?: null
     ): VictoryLossEventFilter;
   };
 
