@@ -90,6 +90,7 @@ export interface ILoadingWidgetOutput
     AwaitTransaction(txn: ethers.ContractTransaction): Promise<ethers.ContractTransaction>
     FetchState() : Promise<void>
     EndLoading() : Promise<void>
+    Bump() : Promise<void>
 }
 
 export class LoadingWidgetOutput implements ILoadingWidgetOutput 
@@ -140,6 +141,13 @@ export class LoadingWidgetOutput implements ILoadingWidgetOutput
     async EndLoading() : Promise<void> 
     {
         console.log("Ending Loading");
+        this.setLoading(false);
+    }
+
+    async Bump() : Promise<void> 
+    {
+        console.log("Bump");
+        this.setLoading(true);        
         this.setLoading(false);
     }
 }
@@ -298,7 +306,7 @@ export class ZKBackend implements IZKBackend
         this.tgs = await GetTgs(this.widget);        
         this.address = this.address ?? signerAddress;
         this.isAdmin = this.isAdmin ?? (await GetOwner() == this.address);
-        this.tgs = await GetTgs(this.widget); 
+        await this.widget.Bump(); 
     }
 
     async JoinGame(priv: PrivatePlayerInfo): Promise<void> 

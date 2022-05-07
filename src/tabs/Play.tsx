@@ -11,14 +11,14 @@ import { ZKBackend, LoadingWidgetOutput } from "../zkWitchesEthers";
 
 enum UIState 
 {
-  NoData,
+  NoData,  
+  LoadingScreen,
+
   CitizenSelector,
-  WaitingOnOthersToJoin,
   MyAction,
   MyResponse,
+
   OtherTurn,
-  GameOver,
-  LoadingScreen,
 }
 
 function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, ppi?: PrivatePlayerInfo ) : UIState
@@ -31,34 +31,19 @@ function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, 
   {
     return UIState.NoData;
   }
-  else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING) 
+  else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING && tgs.addresses.indexOf(myAddress as string) == -1) 
   {
-    if (tgs.addresses.indexOf(myAddress as string) == -1) 
-    {
-      return UIState.CitizenSelector;
-    } else {
-      return UIState.WaitingOnOthersToJoin;
-    }
+    return UIState.CitizenSelector;
   } 
-  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN) 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN && (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot)) 
   {
-    if (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot) // TODO Fix null check
-    {
-      return UIState.MyAction;
-    } else {
-      return UIState.OtherTurn;
-    }
+    return UIState.MyAction;
   } 
-  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE) 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE && (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot)) 
   {
-    if (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot) // TODO Fix null check
-    {
-      return UIState.MyResponse;
-    } else {
-      return UIState.OtherTurn;
-    }
+    return UIState.MyResponse;
   } else {
-    throw("Unknown State");
+    return UIState.OtherTurn;
   }
 }
 
@@ -71,21 +56,20 @@ export default function Play()
 
   let state : UIState = GetUIState(isLoading, backend.GetAddress(), backend.GetTotalGameState(), priv);
 
-  console.log("master priv ", priv);
-  console.log("master tgs ", backend.GetTotalGameState());
+  console.log("master priv: ", priv);
+  console.log("master tgs: ", backend.GetTotalGameState());
   console.log("address: ", backend.GetAddress());
-  console.log("isAdmin : ", backend.IsAdmin());
+  console.log("isAdmin: ", backend.IsAdmin());
 
   return (
     <Stack direction="column" spacing={4}>
       {state as UIState === UIState.NoData as UIState && <NoData action={() => backend.RefreshStatus()} />}
 
       {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv} setPriv={setPriv} backend={backend} />}
-      {state as UIState === UIState.WaitingOnOthersToJoin as UIState && <WaitingOnOthersToJoin />}
       {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState() as TotalGameState} priv={priv} backend={backend} />}
       {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={"Respond to Accusation"} />}
-      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn />}
-      {state as UIState === UIState.GameOver as UIState && <GameOver />}
+      
+      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={backend.GetTotalGameState() as TotalGameState} address={backend.GetAddress() as string} />}
 
       {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={loadingString}/>}
       { backend.IsAdmin() && <DebugMenu backend={backend} address={backend.GetAddress() as string}/> }
@@ -242,19 +226,6 @@ function TypeSelector(props: TypeSelectorProps) {
 
 // END CITIZEN SELECTOR
 
-// WaitingOnOthersToJoin
-
-type WaitingOnOthersToJoin = {} 
-
-function WaitingOnOthersToJoin(props: WaitingOnOthersToJoin) 
-{
-  return (
-    <Stack direction="column">
-      <TextField label="Waiting on other players..." variant="outlined" InputProps={{ readOnly: true,}} /> // TODO IMPROVE
-    </Stack>
-  );
-}
-
 // MYACTION
 
 type MyActionProps = 
@@ -267,15 +238,16 @@ type MyActionProps =
 function MyAction(props: MyActionProps) {
 
   // TODO FIX
-  let enemyPlayerIds = [1,2,3];
+  let allPlayerIds = [0,1,2,3];
+  let enemyPlayerIds = allPlayerIds.filter((value, index, arr) => value != props.priv.slot);
 
   return (
     <Stack direction="column" spacing={4}>
       <ActivePlayer tgs={props.tgs} priv={props.priv} backend={props.backend} />
       <Divider variant="middle" />
-      <EnemyPlayer enemyPlayerId={enemyPlayerIds[0]} actionProps={props} />
-      <EnemyPlayer enemyPlayerId={enemyPlayerIds[1]} actionProps={props} />
-      <EnemyPlayer enemyPlayerId={enemyPlayerIds[2]} actionProps={props} />      
+      <EnemyPlayer slot={enemyPlayerIds[0]} actionProps={props} />
+      <EnemyPlayer slot={enemyPlayerIds[1]} actionProps={props} />
+      <EnemyPlayer slot={enemyPlayerIds[2]} actionProps={props} />      
     </Stack>
   );
 }
@@ -285,8 +257,7 @@ function ActivePlayer(props: MyActionProps)
   return (
     <Stack direction="row"
     spacing = {1}>
-      <TextField label={"Player " + props.priv.slot + " (You)"} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.tgs.players[props.priv.slot].food as number} lumber={props.tgs.players[props.priv.slot].lumber as number} />
+      <PlayerIndicator slot={props.priv.slot} address={props.tgs.addresses[props.priv.slot]} is_player={true} is_empty={false} tgs={props.tgs} />
       <ActionTableau type={0} actionProps={props} />
       <ActionTableau type={1} actionProps={props} />
     </Stack>
@@ -295,7 +266,8 @@ function ActivePlayer(props: MyActionProps)
 
 type EnemyProps = 
 {
-  enemyPlayerId: number,
+  slot: number,
+
   actionProps: MyActionProps,
 }
 
@@ -304,13 +276,38 @@ function EnemyPlayer(props: EnemyProps)
   return (
     <Stack direction="row"
     spacing = {1}>
-      <TextField label={"Player " + props.enemyPlayerId} variant="outlined" InputProps={{ readOnly: true,}} />
-      <ResourceIndicator food={props.actionProps.tgs.players[props.enemyPlayerId].food as number} lumber={props.actionProps.tgs.players[props.enemyPlayerId].lumber as number} />
-      <ActionTableau type={2} target={props.enemyPlayerId} actionProps={props.actionProps} />
-      <ActionTableau type={3} target={props.enemyPlayerId} witchType={0} actionProps={props.actionProps} />
-      <ActionTableau type={3} target={props.enemyPlayerId} witchType={1} actionProps={props.actionProps} />
-      <ActionTableau type={3} target={props.enemyPlayerId} witchType={2} actionProps={props.actionProps} />
-      <ActionTableau type={3} target={props.enemyPlayerId} witchType={3} actionProps={props.actionProps} />
+      <PlayerIndicator slot={props.slot} address={props.actionProps.tgs.addresses[props.slot]} is_player={false} is_empty={false} tgs={props.actionProps.tgs} />
+      <ActionTableau type={2} target={props.slot} actionProps={props.actionProps} />
+      <ActionTableau type={3} target={props.slot} witchType={0} actionProps={props.actionProps} />
+      <ActionTableau type={3} target={props.slot} witchType={1} actionProps={props.actionProps} />
+      <ActionTableau type={3} target={props.slot} witchType={2} actionProps={props.actionProps} />
+      <ActionTableau type={3} target={props.slot} witchType={3} actionProps={props.actionProps} />
+    </Stack>
+  )
+}
+
+type PlayerIndicatorProps = 
+{
+  slot: number,
+  address: string,
+  
+  is_player: boolean,
+  is_empty: boolean,
+
+  tgs: TotalGameState
+}
+
+function PlayerIndicator(props : PlayerIndicatorProps) 
+{
+  let slotText = "Player " + props.slot;
+  let colon = props.is_player ? " (You):" : ":";
+  let addressString = props.is_empty ? "empty" : (props.address.substring(0, 6) + "...");
+
+  return (
+    <Stack direction="row"
+    spacing = {1}>
+      <TextField label={ slotText + colon + addressString } variant="outlined" InputProps={{ readOnly: true,}} />
+      <ResourceIndicator food={props.tgs.players[props.slot].food as number} lumber={props.tgs.players[props.slot].lumber as number} />
     </Stack>
   )
 }
@@ -463,23 +460,56 @@ function MyResponse(props: MyResponseProps)
 
 // OtherTurn
 
-type OtherTurnProps = {}
+type OtherTurnProps = {
+  tgs: TotalGameState
+  address: string
+}
 
 function OtherTurn(props: OtherTurnProps) 
 {
-  return (<TextField label="Other Player's Turn." variant="outlined" InputProps={{ readOnly: true,}} />);
+  return (
+    <Stack direction="column" spacing={4}>
+      <OtherTurnPlayer slot={0} tgs={props.tgs} address={props.address}/>
+      <OtherTurnPlayer slot={1} tgs={props.tgs} address={props.address}/>
+      <OtherTurnPlayer slot={2} tgs={props.tgs} address={props.address}/>
+      <OtherTurnPlayer slot={3} tgs={props.tgs} address={props.address}/>
+    </Stack>
+  );
 }
 
-// GAMEOVER
+type OtherTurnPlayerProps = {
+  tgs: TotalGameState
+  slot: number
+  address: string
+}
 
-type GameOverProps = {}
-
-function GameOver(props: GameOverProps) 
+function OtherTurnPlayer(props: OtherTurnPlayerProps) 
 {
-  return (<TextField label="Game Over!" variant="outlined" InputProps={{ readOnly: true,}} />);
+    let emptyPlayer : boolean = props.tgs.shared.currentNumberOfPlayers <= props.slot;
+    let isPlayer : boolean = props.tgs.addresses[props.slot] == props.address;
+
+    let waitingText : string= "";
+    if (props.tgs.shared.stateEnum == GameStateEnum.GAME_STARTING && emptyPlayer)
+    {
+      waitingText = "Waiting for a new player to join."
+    }
+    else if (props.tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN && props.slot == props.tgs.shared.playerSlotWaiting) 
+    {
+       waitingText = "Waiting for this player to take move."
+    } 
+    else if (props.tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE && props.slot == props.tgs.shared.playerSlotWaiting) 
+    {
+      waitingText = "Waiting for this player to respond to accusation."
+    }
+
+    return (
+    <Stack direction="row" spacing = {1}>
+      <PlayerIndicator slot={props.slot} address={props.tgs.addresses[props.slot]} is_player={isPlayer} is_empty={emptyPlayer} tgs={props.tgs} />
+      {waitingText}
+    </Stack>
+    );
 }
 
-// END GAMEOVER
 
 // LOADINGSCREEN
 
