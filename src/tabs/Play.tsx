@@ -7,7 +7,7 @@ import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
 import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS } from "../zkWitchesTypes";
-import { ZKBackend, signerAddress } from "../zkWitchesEthers";
+import { ZKBackend, LoadingWidgetOutput } from "../zkWitchesEthers";
 
 enum UIState 
 {
@@ -21,19 +21,19 @@ enum UIState
   LoadingScreen,
 }
 
-function GetUIState(loading: boolean, myAddress: string, tgs?: TotalGameState, ppi?: PrivatePlayerInfo, ) : UIState
+function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, ppi?: PrivatePlayerInfo ) : UIState
 {
   if (loading) 
   {
     return UIState.LoadingScreen;
   } 
-  else if (tgs === undefined) 
+  else if (tgs === undefined || myAddress === undefined) 
   {
     return UIState.NoData;
   }
   else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING) 
   {
-    if (tgs.addresses.indexOf(myAddress) == -1) 
+    if (tgs.addresses.indexOf(myAddress as string) == -1) 
     {
       return UIState.CitizenSelector;
     } else {
@@ -67,13 +67,14 @@ export default function Play()
   const [priv, setPriv] = useState<PrivatePlayerInfo>(DefaultPPI());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingString, setLoadingString] = useState<string>("");
+  const [backend] = useState<IZKBackend>(new ZKBackend(new LoadingWidgetOutput(setIsLoading, setLoadingString)));  
 
-  const [backend] = useState<IZKBackend>(new ZKBackend(setIsLoading, setLoadingString));
-
-  let state : UIState = GetUIState(isLoading, "fake", backend.GetTotalGameState(), priv);
+  let state : UIState = GetUIState(isLoading, backend.GetAddress(), backend.GetTotalGameState(), priv);
 
   console.log("master priv ", priv);
   console.log("master tgs ", backend.GetTotalGameState());
+  console.log("address: ", backend.GetAddress());
+  console.log("isAdmin : ", backend.IsAdmin());
 
   return (
     <Stack direction="column" spacing={4}>
@@ -87,7 +88,7 @@ export default function Play()
       {state as UIState === UIState.GameOver as UIState && <GameOver />}
 
       {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={loadingString}/>}
-      <DebugMenu backend={backend} address={signerAddress}/>
+      { backend.IsAdmin() && <DebugMenu backend={backend} address={backend.GetAddress() as string}/> }
     </Stack>
   );
 }

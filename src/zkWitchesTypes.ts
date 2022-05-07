@@ -225,7 +225,10 @@ export type ActionInfo =
 
 export interface IZKBackend 
 {
+    GetAddress() : string | undefined;
     GetTotalGameState() : TotalGameState | undefined;
+    IsAdmin(): boolean | undefined
+    
     RefreshStatus(): Promise<void>;
     JoinGame(priv: PrivatePlayerInfo) : Promise<void>;
     DoAction(priv: PrivatePlayerInfo, action:ActionInfo, level:number): Promise<void>;
@@ -238,11 +241,22 @@ export interface IZKBackend
 
 export class EmptyZKBackend implements IZKBackend 
 {
+
     private tgs?: TotalGameState;
+
+    GetAddress() : string | undefined 
+    {
+        return "";
+    }
 
     GetTotalGameState(): TotalGameState | undefined
     {
         return this.tgs;
+    }
+
+    IsAdmin(): boolean | undefined 
+    {
+        return true;
     }
 
     RefreshStatus(): Promise<void> 
