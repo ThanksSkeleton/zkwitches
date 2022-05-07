@@ -78,9 +78,6 @@ export default function Play()
 }
 
 
-let colors = ["food", "lumber", "brigand", "inquisitor"];
-let type_string = ["Farmer", "LumberJack", "Brigand", "Inquisitor"];
-
 type NoDataProps = 
 {
   action: React.MouseEventHandler<HTMLButtonElement>;
@@ -346,58 +343,6 @@ type TableauProps =
 function ActionTableau(props: TableauProps) {
   // TODO Ugly
 
-  let description_grid = [
-                          ["gather 1 food", "gather 2 food", "gather 3 food", "gather 4 food"],
-                          ["gather 1 lumber", "gather 2 lumber", "gather 3 lumber", "gather 4 lumber"],
-                          ["Trade 2 food for 1 Lumber", "Trade 2 Lumber for 1 Food", "Steal 1 Lumber", "Steal 1 Food"], 
-                          ["Inquisition for 3 Food 3 Lumber", "Inquisition for 2 Food 2 Lumber", "Inquisition for 1 Food 1 Lumber", "Inquisition for Free"]
-                         ];
-  
-                         // TODO WitchType
-
-  function HaveCitizens(priv: PrivatePlayerInfo, tgs: TotalGameState, citizen_type: number, count_required: number ) : boolean 
-  {
-    return (priv.citizens[citizen_type] >= count_required || (priv.witches[citizen_type] == 1 && tgs.players[priv.slot].WitchAlive[citizen_type]))
-  } 
-
-  function HasFoodAndLumber(tgs: TotalGameState, fl: FoodAndLumber, playerId?: number) : boolean 
-  {
-    if ( playerId == undefined ) return false;  
-    return (tgs.players[playerId].food >= fl[0] && tgs.players[playerId].lumber >= fl[1]);
-  }
-
-  function WitchAlive(tgs: TotalGameState, playerId?: number, witch_type?: number) : boolean 
-  {
-    if ( playerId == undefined ) return false;  
-    if ( witch_type == undefined ) return false;  
-    return (tgs.players[playerId].WitchAlive[witch_type]); 
-  }
-
-  let priv = props.actionProps.priv;
-  let tgs = props.actionProps.tgs;
-
-  // TODO super ugly
-
-  type FoodAndLumber = number[];
-
-  let brigandTrades = [[2,0], [0,2], [0,0], [0,0]];
-  let stealAmounts = [[0,1], [1,0], [0,1], [1,0]];
-  let inquisitionCosts = [[3,3], [2,2], [1,1], [0,0]];
-
-  let enabled_grid = 
-  [
-    [HaveCitizens(priv, tgs, 0, 0), HaveCitizens(priv, tgs, 0, 1), HaveCitizens(priv, tgs, 0, 2), HaveCitizens(priv, tgs, 0, 3)],
-    [HaveCitizens(priv, tgs, 1, 0), HaveCitizens(priv, tgs, 1, 1), HaveCitizens(priv, tgs, 1, 2), HaveCitizens(priv, tgs, 1, 3)],
-    [HaveCitizens(priv, tgs, 2, 0) && HasFoodAndLumber(tgs, brigandTrades[0], priv.slot) && HasFoodAndLumber(tgs, stealAmounts[0], props.target,), 
-     HaveCitizens(priv, tgs, 2, 1) && HasFoodAndLumber(tgs, brigandTrades[1], priv.slot) && HasFoodAndLumber(tgs, stealAmounts[1], props.target,),
-     HaveCitizens(priv, tgs, 2, 2) && HasFoodAndLumber(tgs, stealAmounts[2], props.target), 
-     HaveCitizens(priv, tgs, 2, 3) && HasFoodAndLumber(tgs, stealAmounts[3], props.target)], 
-     [HaveCitizens(priv, tgs, 3, 0) && HasFoodAndLumber(tgs, inquisitionCosts[0], priv.slot) && WitchAlive(tgs, props.target, props.witchType), 
-      HaveCitizens(priv, tgs, 3, 1) && HasFoodAndLumber(tgs, inquisitionCosts[1], priv.slot) && WitchAlive(tgs, props.target, props.witchType),
-      HaveCitizens(priv, tgs, 3, 2) && HasFoodAndLumber(tgs, inquisitionCosts[2], priv.slot) && WitchAlive(tgs, props.target, props.witchType),
-      HaveCitizens(priv, tgs, 3, 3) && WitchAlive(tgs, props.target, props.witchType)]
-    ];
-
     let actionInfo : ActionInfo = { type : props.type, target : props.target, witchType : props.witchType };
 
     return (
@@ -408,25 +353,25 @@ function ActionTableau(props: TableauProps) {
         //color={colors[props.type]} TODO FIX
         >
           <Button
-          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 3)}
+          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 3)}
           disabled={!enabled_grid[props.type][3]}
           >
           {type_string[props.type]} 3 - {description_grid[props.type][3]}
           </Button>
           <Button
-          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 2)}
+          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 2)}
           disabled={!enabled_grid[props.type][2]}
           >
           {type_string[props.type]} 2 - {description_grid[props.type][2]}
           </Button>
           <Button
-          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 1)}
+          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 1)}
           disabled={!enabled_grid[props.type][1]}
           >
           {type_string[props.type]} 1 - {description_grid[props.type][1]}
           </Button>
           <Button
-          onClick={() => props.actionProps.backend.DoAction(priv, actionInfo, 0)}
+          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 0)}
           disabled={!enabled_grid[props.type][0]}
           >
           {type_string[props.type]} 0 - {description_grid[props.type][0]}

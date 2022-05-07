@@ -1,7 +1,7 @@
 // CLASSES 
 
 import { BigNumber } from "ethers";
-import { ZkWitches } from "./import/ZkWitches/ZkWitches";
+import { ZkWitches } from "./import/contracts/ZkWitches/ZkWitches";
 import { HandCommitmentInput } from "./import/HandCommitment_input"
 import { NoWitchInput } from "./import/NoWitch_input"
 import { ValidMoveInput } from "./import/ValidMove_input"

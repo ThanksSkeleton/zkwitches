@@ -13,14 +13,18 @@ import type {
   Signer,
   utils,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type {
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
 import type { Listener, Provider } from "@ethersproject/providers";
 import type {
   TypedEventFilter,
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "../common";
+} from "../../common";
 
 export declare namespace ZkWitches {
   export type SharedStateStruct = {
@@ -32,7 +36,7 @@ export declare namespace ZkWitches {
     previous_action_game_block: BigNumberish;
     current_block: BigNumberish;
     current_sequence_number: BigNumberish;
-    currentGameCount: BigNumberish;
+    gameId: BigNumberish;
   };
 
   export type SharedStateStructOutput = [
@@ -54,7 +58,7 @@ export declare namespace ZkWitches {
     previous_action_game_block: BigNumber;
     current_block: BigNumber;
     current_sequence_number: BigNumber;
-    currentGameCount: BigNumber;
+    gameId: BigNumber;
   };
 
   export type PlayerStateStruct = {
@@ -124,7 +128,10 @@ export interface ZkWitchesInterface extends utils.Interface {
     "Surrender()": FunctionFragment;
     "hc_verifierAddr()": FunctionFragment;
     "nw_verifierAddr()": FunctionFragment;
+    "owner()": FunctionFragment;
+    "renounceOwnership()": FunctionFragment;
     "tgs()": FunctionFragment;
+    "transferOwnership(address)": FunctionFragment;
     "vm_verifierAddr()": FunctionFragment;
   };
 
@@ -141,7 +148,10 @@ export interface ZkWitchesInterface extends utils.Interface {
       | "Surrender"
       | "hc_verifierAddr"
       | "nw_verifierAddr"
+      | "owner"
+      | "renounceOwnership"
       | "tgs"
+      | "transferOwnership"
       | "vm_verifierAddr"
   ): FunctionFragment;
 
@@ -200,7 +210,16 @@ export interface ZkWitchesInterface extends utils.Interface {
     functionFragment: "nw_verifierAddr",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "tgs", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "transferOwnership",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "vm_verifierAddr",
     values?: undefined
@@ -241,14 +260,95 @@ export interface ZkWitchesInterface extends utils.Interface {
     functionFragment: "nw_verifierAddr",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "tgs", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "vm_verifierAddr",
     data: BytesLike
   ): Result;
 
-  events: {};
+  events: {
+    "Action(int256,address,uint8,uint8,uint8,uint8,uint8)": EventFragment;
+    "GameStart(int256)": EventFragment;
+    "Join(int256,address,uint8)": EventFragment;
+    "OwnershipTransferred(address,address)": EventFragment;
+    "VictoryLoss(int256,address,uint8,uint8)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "Action"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "GameStart"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Join"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "VictoryLoss"): EventFragment;
 }
+
+export interface ActionEventObject {
+  gameId: BigNumber;
+  player: string;
+  slot: number;
+  actionType: number;
+  target: number;
+  witchType: number;
+  actionLevel: number;
+}
+export type ActionEvent = TypedEvent<
+  [BigNumber, string, number, number, number, number, number],
+  ActionEventObject
+>;
+
+export type ActionEventFilter = TypedEventFilter<ActionEvent>;
+
+export interface GameStartEventObject {
+  gameId: BigNumber;
+}
+export type GameStartEvent = TypedEvent<[BigNumber], GameStartEventObject>;
+
+export type GameStartEventFilter = TypedEventFilter<GameStartEvent>;
+
+export interface JoinEventObject {
+  gameId: BigNumber;
+  player: string;
+  slot: number;
+}
+export type JoinEvent = TypedEvent<
+  [BigNumber, string, number],
+  JoinEventObject
+>;
+
+export type JoinEventFilter = TypedEventFilter<JoinEvent>;
+
+export interface OwnershipTransferredEventObject {
+  previousOwner: string;
+  newOwner: string;
+}
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string],
+  OwnershipTransferredEventObject
+>;
+
+export type OwnershipTransferredEventFilter =
+  TypedEventFilter<OwnershipTransferredEvent>;
+
+export interface VictoryLossEventObject {
+  gameId: BigNumber;
+  player: string;
+  slot: number;
+  victoryLossType: number;
+}
+export type VictoryLossEvent = TypedEvent<
+  [BigNumber, string, number, number],
+  VictoryLossEventObject
+>;
+
+export type VictoryLossEventFilter = TypedEventFilter<VictoryLossEvent>;
 
 export interface ZkWitches extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -335,6 +435,12 @@ export interface ZkWitches extends BaseContract {
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<[string]>;
 
+    owner(overrides?: CallOverrides): Promise<[string]>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     tgs(
       overrides?: CallOverrides
     ): Promise<
@@ -342,6 +448,11 @@ export interface ZkWitches extends BaseContract {
         shared: ZkWitches.SharedStateStructOutput;
       }
     >;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     vm_verifierAddr(overrides?: CallOverrides): Promise<[string]>;
   };
@@ -404,7 +515,18 @@ export interface ZkWitches extends BaseContract {
 
   nw_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
+  owner(overrides?: CallOverrides): Promise<string>;
+
+  renounceOwnership(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   tgs(overrides?: CallOverrides): Promise<ZkWitches.SharedStateStructOutput>;
+
+  transferOwnership(
+    newOwner: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   vm_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
@@ -461,12 +583,76 @@ export interface ZkWitches extends BaseContract {
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<string>;
 
+    owner(overrides?: CallOverrides): Promise<string>;
+
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
     tgs(overrides?: CallOverrides): Promise<ZkWitches.SharedStateStructOutput>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     vm_verifierAddr(overrides?: CallOverrides): Promise<string>;
   };
 
-  filters: {};
+  filters: {
+    "Action(int256,address,uint8,uint8,uint8,uint8,uint8)"(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      actionType?: null,
+      target?: null,
+      witchType?: null,
+      actionLevel?: null
+    ): ActionEventFilter;
+    Action(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      actionType?: null,
+      target?: null,
+      witchType?: null,
+      actionLevel?: null
+    ): ActionEventFilter;
+
+    "GameStart(int256)"(gameId?: BigNumberish | null): GameStartEventFilter;
+    GameStart(gameId?: BigNumberish | null): GameStartEventFilter;
+
+    "Join(int256,address,uint8)"(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null
+    ): JoinEventFilter;
+    Join(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null
+    ): JoinEventFilter;
+
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
+    OwnershipTransferred(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
+
+    "VictoryLoss(int256,address,uint8,uint8)"(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      victoryLossType?: null
+    ): VictoryLossEventFilter;
+    VictoryLoss(
+      gameId?: BigNumberish | null,
+      player?: string | null,
+      slot?: null,
+      victoryLossType?: null
+    ): VictoryLossEventFilter;
+  };
 
   estimateGas: {
     ActionNoProof(
@@ -525,7 +711,18 @@ export interface ZkWitches extends BaseContract {
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<BigNumber>;
 
+    owner(overrides?: CallOverrides): Promise<BigNumber>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     tgs(overrides?: CallOverrides): Promise<BigNumber>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     vm_verifierAddr(overrides?: CallOverrides): Promise<BigNumber>;
   };
@@ -587,7 +784,18 @@ export interface ZkWitches extends BaseContract {
 
     nw_verifierAddr(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     tgs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     vm_verifierAddr(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };

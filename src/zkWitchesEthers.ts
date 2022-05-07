@@ -1,7 +1,7 @@
 import { BigNumberish, ethers } from "ethers";
 import zkWitchesAbi from './import/zkWitches.json';
 import accessAbi from "./Ownable.json"
-import { ZkWitches } from './import/ZkWitches/ZkWitches' 
+import { ActionEvent, VictoryLossEvent, ZkWitches } from './import/contracts/ZkWitches/ZkWitches' 
 import { targetChain } from "./chainInfo";
 
 import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
@@ -271,6 +271,68 @@ async function SetTgs(tgs_input: TotalGameState, widget: ILoadingWidgetOutput) :
     then(() => widget.FetchState()).then(() => zkWitches.GetTGS()).
     catch(errorHandler).
     finally(() => widget.EndLoading());
+}
+
+export type EventRepresentation = 
+{
+    color: string,
+    text: string,
+    timestamp : Date
+}
+
+function TODO_DATE() : Date
+{
+    return new Date();
+}
+
+async function GetEvents(gameId : number) : Promise<EventRepresentation[]> 
+{
+    let toReturn : EventRepresentation[] = [];
+    await connectContract();
+
+    {
+        let joins = await zkWitches.queryFilter(zkWitches.filters.Join(gameId));
+        let joins_transformed = joins.map((e,i,a) => <EventRepresentation> { color: JOIN_COLOR_WHITE, text: "Player " + e.args.slot + " (" + e.args.player + ") has joined game " + e.args.gameId + ".", timestamp: TODO_DATE() });
+        toReturn.concat(joins_transformed);
+    }
+
+    {
+    // There should only be one of them but whatever
+        let gameStarts = await zkWitches.queryFilter(zkWitches.filters.GameStart(gameId));
+        let starts_transformed = gameStarts.map((e,i,a) => <EventRepresentation> { color: GAMESTART_COLOR_WHITE, text: "Game " + e.args.gameId + " started.", timestamp: TODO_DATE() })
+        toReturn.concat(starts_transformed);
+    }
+
+    {
+        let actions = await zkWitches.queryFilter(zkWitches.filters.Action(gameId));
+        let actions_transformed = actions.map((e,i,a) => convertAction(e));
+        toReturn.concat(actions_transformed);
+    }
+
+    {
+        let victoryLoss = await zkWitches.queryFilter(zkWitches.filters.VictoryLoss(gameId));
+        let victories_transformed = victoryLoss.map((e,i,a) => convertVictoryLoss(e));
+        toReturn.concat(victories_transformed);
+    }
+
+    return toReturn;
+}
+
+
+function convertAction(e : ActionEvent) : EventRepresentation 
+{
+    let player = "Player " + e.args.slot + " (" + e.args.player + ") ";
+    let gatherFood = "gathered " + e.args.actionLevel
+
+    return <EventRepresentation> { 
+        color: ACTION_COLORS[e.args.actionType],
+        text: "Player " + e.args.gameId + " started.", timestamp: TODO_DATE() })
+
+}
+
+function convertVictoryLoss(e : VictoryLossEvent) : EventRepresentation 
+{
+
 }
 
 export class ZKBackend implements IZKBackend 
