@@ -6,8 +6,11 @@ import { Checkbox, Divider} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
-import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS } from "../zkWitchesTypes";
-import { ZKBackend, LoadingWidgetOutput } from "../zkWitchesEthers";
+import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS, Empty, GetSlot } from "../zkWitchesTypes";
+import { ZKBackend, LoadingWidgetOutput, EventRepresentation } from "../zkWitchesEthers";
+import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
+import { ethers } from "ethers";
+import { PrivMapper } from "../TabPanel";
 
 enum UIState 
 {
@@ -15,14 +18,18 @@ enum UIState
   LoadingScreen,
 
   CitizenSelector,
+
   MyAction,
   MyResponse,
 
   OtherTurn,
 }
 
-function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, ppi?: PrivatePlayerInfo ) : UIState
+function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, priv?: PrivatePlayerInfo ) : UIState
 {
+  let slot = GetSlot(tgs, myAddress);
+
+
   if (loading) 
   {
     return UIState.LoadingScreen;
@@ -30,16 +37,15 @@ function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, 
   else if (tgs === undefined || myAddress === undefined) 
   {
     return UIState.NoData;
-  }
-  else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING && tgs.addresses.indexOf(myAddress as string) == -1) 
+  } else if (tgs.shared.stateEnum == GameStateEnum.GAME_STARTING && slot == undefined) 
   {
     return UIState.CitizenSelector;
   } 
-  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN && (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot)) 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_TURN && (priv == null || tgs.shared.playerSlotWaiting == slot)) 
   {
     return UIState.MyAction;
   } 
-  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE && (ppi == null || tgs.shared.playerSlotWaiting == ppi.slot)) 
+  else if (tgs.shared.stateEnum == GameStateEnum.WAITING_FOR_PLAYER_ACCUSATION_RESPONSE && (priv == null || tgs.shared.playerSlotWaiting == slot)) 
   {
     return UIState.MyResponse;
   } else {
@@ -47,32 +53,46 @@ function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, 
   }
 }
 
-export default function Play() 
+//{state as UIState != UIState.NoData as UIState && <EventList events={backend.GetEvents()} /> }
+
+type PlayProps = 
 {
-  const [priv, setPriv] = useState<PrivatePlayerInfo>(DefaultPPI());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [loadingString, setLoadingString] = useState<string>("");
-  const [backend] = useState<IZKBackend>(new ZKBackend(new LoadingWidgetOutput(setIsLoading, setLoadingString)));  
+  isLoading : boolean
+  loadingString: string,
 
-  let state : UIState = GetUIState(isLoading, backend.GetAddress(), backend.GetTotalGameState(), priv);
+  privMapper : PrivMapper, 
 
-  console.log("master priv: ", priv);
-  console.log("master tgs: ", backend.GetTotalGameState());
-  console.log("address: ", backend.GetAddress());
-  console.log("isAdmin: ", backend.IsAdmin());
+  backend: IZKBackend
+
+  widget: LoadingWidgetOutput
+}
+
+export default function Play(props: PlayProps) 
+{
+  let tgs = props.backend.GetTotalGameState();
+
+  let priv : PrivatePlayerInfo | undefined;
+  if (tgs != null)
+  {
+    priv = props.privMapper.Get(tgs.shared.gameId as number);
+  }
+
+  let state : UIState = GetUIState(props.isLoading, props.backend.GetAddress(), props.backend.GetTotalGameState(), priv);
+  let slot = GetSlot(props.backend.GetTotalGameState(), props.backend.GetAddress());
 
   return (
     <Stack direction="column" spacing={4}>
-      {state as UIState === UIState.NoData as UIState && <NoData action={() => backend.RefreshStatus()} />}
+      {state as UIState === UIState.NoData as UIState && <NoData action={() => props.backend.RefreshStatus()} />}
 
-      {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv} setPriv={setPriv} backend={backend} />}
-      {state as UIState === UIState.MyAction as UIState && <MyAction tgs={backend.GetTotalGameState() as TotalGameState} priv={priv} backend={backend} />}
-      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => backend.RespondToAccusation(priv)} response_description={"Respond to Accusation"} />}
+      {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv as PrivatePlayerInfo} privMapper={props.privMapper} backend={props.backend} widget={props.widget}/>}
+      {state as UIState === UIState.MyAction as UIState && <MyAction slot={slot as number} tgs={tgs as TotalGameState} priv={priv as PrivatePlayerInfo} backend={props.backend} />}
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => props.backend.RespondToAccusation(priv as PrivatePlayerInfo, slot as number)} response_description={"Respond to Accusation"} />}
       
-      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={backend.GetTotalGameState() as TotalGameState} address={backend.GetAddress() as string} />}
+      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={tgs as TotalGameState} address={props.backend.GetAddress() as string} />}
 
-      {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={loadingString}/>}
-      { backend.IsAdmin() && <DebugMenu backend={backend} address={backend.GetAddress() as string}/> }
+      {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={props.loadingString}/>}
+
+      { props.backend.IsAdmin() && <DebugMenu backend={props.backend} address={props.backend.GetAddress() as string}/> }
     </Stack>
   );
 }
@@ -93,28 +113,26 @@ function NoData(props: NoDataProps)
   );
 }
 
-// CITIZEN SELECTOR
-
 type CitizenSelectorProps = 
 {
   priv: PrivatePlayerInfo;
-  setPriv: React.Dispatch<React.SetStateAction<PrivatePlayerInfo>>
+  privMapper: PrivMapper;
   backend: IZKBackend
+  widget: LoadingWidgetOutput
 }
 
 function CitizenSelector(props: CitizenSelectorProps) 
 {
-
-  let total = Total(props.priv);
+ 
 
   return (
       <Stack direction="column" spacing = {1}>
-          <TypeSelector typeIndex={0} priv={props.priv} setPriv={props.setPriv} />
-          <TypeSelector typeIndex={1} priv={props.priv} setPriv={props.setPriv} />
-          <TypeSelector typeIndex={2} priv={props.priv} setPriv={props.setPriv} />
-          <TypeSelector typeIndex={3} priv={props.priv} setPriv={props.setPriv} />
+          <TypeSelector typeIndex={0} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
+          <TypeSelector typeIndex={1} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
+          <TypeSelector typeIndex={2} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
+          <TypeSelector typeIndex={3} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
           <Divider variant="middle" />
-          <CompleteMeter action={() => props.backend.JoinGame(props.priv)} total={total} />
+          <CompleteMeter action={() => { props.privMapper.SaveActive(); props.backend.JoinGame(props.priv);  } } priv={props.priv} />
       </Stack>
   );
 }
@@ -128,32 +146,33 @@ function valueText(value : number, index: number)
 type CompleteMeterProps =
 {
     action: React.MouseEventHandler<HTMLButtonElement>;
-    total: number 
+    priv: PrivatePlayerInfo; 
 }
 
 function CompleteMeter(props: CompleteMeterProps) 
 {
   let sliderMark = [{value:7, label:"7"}];
 
+  let total = Total(props.priv);
+
   return (
       <Stack direction="row"
       spacing = {1}>            
           <Slider
               aria-label="Total Meter"
-              defaultValue={props.total}
-              value={props.total}
+              value={total}
               getAriaValueText={valueText}
               valueLabelDisplay="auto"
               step={1}
               min={0}
               max={8}
               disabled
-              color={props.total === 7 ? "primary" : "secondary"} 
+              color={total === 7 ? "primary" : "secondary"} 
               marks={sliderMark}
           />
           <Button
               onClick={props.action}
-              disabled={!(props.total === 7)}>
+              disabled={!(total === 7)}>
               Submit
           </Button>
       </Stack>
@@ -165,32 +184,30 @@ type TypeSelectorProps =
   typeIndex: number
 
   priv: PrivatePlayerInfo;
-  setPriv: React.Dispatch<React.SetStateAction<PrivatePlayerInfo>>
+  privMapper: PrivMapper;
+  widget: LoadingWidgetOutput
 }
 
 function TypeSelector(props: TypeSelectorProps) {
-
-  const [slider, setSlider] = useState(props.priv.citizens[props.typeIndex]);
-  const [checked, setChecked] = useState(props.priv.witches[props.typeIndex] == 1);
 
   let labelString = type_string[props.typeIndex];
   
   const handleChangeCheckBox = (event: any) => 
   {
-    setChecked(event.target.checked);
     console.log("checkbox newValue ", event.target.checked);
-    props.priv.witches[props.typeIndex] = (event.target.checked ? 1 : 0);
+    props.priv.witches[props.typeIndex] = (event.target.checked ? 0 : 1);
     console.log("checkbox priv ", props.priv);
-    props.setPriv({... props.priv})
+    props.privMapper.SaveActive();
+    props.widget.Bump();
   };
 
   const handleChangeSlider = (event: any, newValue:number|number[]) => 
   {
-    setSlider(newValue as number);
     console.log("slider newValue ", newValue);
     props.priv.citizens[props.typeIndex] = newValue as number;
     console.log("slider priv ", props.priv);
-    props.setPriv({... props.priv})
+    props.privMapper.SaveActive();
+    props.widget.Bump();
   };
 
   return (
@@ -199,7 +216,7 @@ function TypeSelector(props: TypeSelectorProps) {
           <TextField label={labelString} variant="outlined" InputProps={{readOnly: true,}} />
           <Slider
           aria-label={labelString + " Selector"}
-          defaultValue={slider}
+          value={props.priv.citizens[props.typeIndex]}
           getAriaValueText={valueText}
           valueLabelDisplay="auto"
           step={1}
@@ -211,8 +228,8 @@ function TypeSelector(props: TypeSelectorProps) {
           />
           <TextField label="Witch" variant="outlined" InputProps={{readOnly: true,}} />
           <Checkbox
-          checked={checked}
-          onChange={handleChangeCheckBox}
+          checked={props.priv.witches[props.typeIndex] == 1}
+          onClick={handleChangeCheckBox}
           // color={props.color} TODO FIX
           // label="Witch"
           // labelPlacement="top"
@@ -229,6 +246,7 @@ type MyActionProps =
 {
   tgs: TotalGameState,
   priv: PrivatePlayerInfo,
+  slot: number,
   backend: IZKBackend,
 }
 
@@ -236,11 +254,11 @@ function MyAction(props: MyActionProps) {
 
   // TODO FIX
   let allPlayerIds = [0,1,2,3];
-  let enemyPlayerIds = allPlayerIds.filter((value, index, arr) => value != props.priv.slot);
+  let enemyPlayerIds = allPlayerIds.filter((value, index, arr) => value != props.slot);
 
   return (
     <Stack direction="column" spacing={4}>
-      <ActivePlayer tgs={props.tgs} priv={props.priv} backend={props.backend} />
+      <ActivePlayer slot={props.slot} tgs={props.tgs} priv={props.priv} backend={props.backend} />
       <Divider variant="middle" />
       <EnemyPlayer slot={enemyPlayerIds[0]} actionProps={props} />
       <EnemyPlayer slot={enemyPlayerIds[1]} actionProps={props} />
@@ -254,7 +272,7 @@ function ActivePlayer(props: MyActionProps)
   return (
     <Stack direction="row"
     spacing = {1}>
-      <PlayerIndicator slot={props.priv.slot} address={props.tgs.addresses[props.priv.slot]} is_player={true} is_empty={false} tgs={props.tgs} />
+      <PlayerIndicator slot={props.slot} address={props.tgs.addresses[props.slot]} is_player={true} is_empty={false} tgs={props.tgs} />
       <ActionTableau type={0} actionProps={props} />
       <ActionTableau type={1} actionProps={props} />
     </Stack>
@@ -341,9 +359,19 @@ type TableauProps =
 }
 
 function ActionTableau(props: TableauProps) {
-  // TODO Ugly
 
-    let actionInfo : ActionInfo = { type : props.type, target : props.target, witchType : props.witchType };
+    let actionInfo : ActionInfo = { type : props.type, target : props.target ?? -1 , witchType : props.witchType ?? -1 };
+
+    let buttons = [];
+    for(var actionLevel = 3; actionLevel>=0; actionLevel--) 
+    {
+      buttons.push(<Button
+      onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, props.actionProps.slot, actionInfo, actionLevel)}
+      disabled={!IsEnabled(props.actionProps.tgs, props.actionProps.priv, props.actionProps.slot, actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
+      >
+      {ShortDescription(actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
+      </Button>)
+    }
 
     return (
         <ButtonGroup
@@ -352,30 +380,7 @@ function ActionTableau(props: TableauProps) {
         aria-label="outlined button group"          
         //color={colors[props.type]} TODO FIX
         >
-          <Button
-          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 3)}
-          disabled={!enabled_grid[props.type][3]}
-          >
-          {type_string[props.type]} 3 - {description_grid[props.type][3]}
-          </Button>
-          <Button
-          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 2)}
-          disabled={!enabled_grid[props.type][2]}
-          >
-          {type_string[props.type]} 2 - {description_grid[props.type][2]}
-          </Button>
-          <Button
-          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 1)}
-          disabled={!enabled_grid[props.type][1]}
-          >
-          {type_string[props.type]} 1 - {description_grid[props.type][1]}
-          </Button>
-          <Button
-          onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, actionInfo, 0)}
-          disabled={!enabled_grid[props.type][0]}
-          >
-          {type_string[props.type]} 0 - {description_grid[props.type][0]}
-          </Button>
+          { buttons }
         </ButtonGroup>
     );
 }
@@ -468,6 +473,25 @@ function LoadingScreen(props: LoadingScreenProps)
 }
 
 // DebugMenu 
+
+type EventListProps = 
+{
+  events: EventRepresentation[]
+}
+
+function EventList(props: EventListProps) 
+{
+    let chips = []
+    for (let i = 0; i< props.events.length; i++) 
+    {
+      chips.push(<Chip label={props.events[i].text + " " + props.events[i].timestamp} color="default"></Chip>)
+    }
+    return (
+      <Stack direction="row" spacing = {1}>
+        {chips}
+      </Stack>
+      );
+}
 
 type DebugMenuProps = 
 {

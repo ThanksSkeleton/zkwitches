@@ -5,6 +5,10 @@ import Container from '@mui/material/Container'
 import Box from '@mui/material/Box';
 import About from './tabs/About';
 import Play from './tabs/Play';
+import { useState } from 'react';
+import { DefaultPPI, Empty, IZKBackend, PrivatePlayerInfo } from './zkWitchesTypes';
+import { LoadingWidgetOutput, ZKBackend } from './zkWitchesEthers';
+import { ethers } from 'ethers';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -39,12 +43,62 @@ function a11yProps(index: number) {
   };
 }
 
+export class PrivMapper 
+{
+
+  private key?: string;
+  private priv?: PrivatePlayerInfo;
+
+  constructor() {}
+
+  public Get(gameId : number): PrivatePlayerInfo
+  {
+    this.key = "GameId"+gameId;
+
+    if (localStorage.getItem(this.key))
+    {
+      console.log("Loading stored priv");
+      this.priv = JSON.parse(localStorage.getItem(this.key) as string) as PrivatePlayerInfo;
+      console.log("stored priv:", this.priv);
+      return this.priv;
+    } 
+    else 
+    {
+      let random_salt = ethers.BigNumber.from(ethers.utils.randomBytes(32));
+      this.priv = Empty(random_salt.toString());
+      console.log("Creating new Priv");
+      localStorage.setItem(this.key as string, JSON.stringify(this.priv));
+      console.log("new priv:", this.priv);
+      return this.priv;
+    }
+  }
+
+  public SaveActive()
+  {
+    console.log("Persisting existing priv:", this.priv);
+    localStorage.setItem(this.key as string, JSON.stringify(this.priv));
+  }
+}
+
 export default function BasicTabs() {
   const [value, setValue] = React.useState(1);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingString, setLoadingString] = useState<string>("");
+
+  let widget = new LoadingWidgetOutput(setIsLoading, setLoadingString);
+
+  const [backend] = useState<IZKBackend>(new ZKBackend(widget));  
+
+  let privMapper = new PrivMapper();
+
+  console.log("master tgs: ", backend.GetTotalGameState());
+  console.log("address: ", backend.GetAddress());
+  console.log("isAdmin: ", backend.IsAdmin());
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -58,14 +112,18 @@ export default function BasicTabs() {
         aria-label="scrollable auto tabs example"
         >
           <Tab label="zkWitches" {...a11yProps(0)} disabled />
-          <Tab label="Play" {...a11yProps(1)} />
-          <Tab label="About" {...a11yProps(2)} />
+          <Tab label="Welcome" {...a11yProps(1)} />
+          <Tab label="Play" {...a11yProps(2)} />
+          <Tab label="About" {...a11yProps(3)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={1}>
-        <Container><Play /></Container>
+        <Container>Welcome</Container>
       </TabPanel>
       <TabPanel value={value} index={2}>
+        <Container><Play isLoading={isLoading} loadingString={loadingString} privMapper={privMapper} backend={backend} widget={widget} /></Container>
+      </TabPanel>
+      <TabPanel value={value} index={3}>
         <About />
       </TabPanel>
     </Box>

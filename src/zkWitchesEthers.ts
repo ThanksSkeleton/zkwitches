@@ -8,6 +8,7 @@ import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameS
 
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 import { Ownable } from "./Ownable";
+import { ACCUSATION_COLOR_WHITE, ACTION_COLORS, GAMESTART_COLOR_WHITE, JOIN_COLOR_WHITE, LongPastTenseDescription, LOSS_COLOR, VICTORY_COLOR } from "./Descriptions";
 
 let zkWitches: ZkWitches;
 let access : Ownable;
@@ -175,11 +176,11 @@ async function JoinGame(priv: PrivatePlayerInfo, widget: ILoadingWidgetOutput) :
     finally(() => widget.EndLoading());
 }
 
-async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number, widget: ILoadingWidgetOutput) :  Promise<TotalGameState>
+async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, slot: number, actionInfo: ActionInfo, level: number, widget: ILoadingWidgetOutput) :  Promise<TotalGameState>
 {
     if (level != 0) 
     {
-        return Action_Complex(tgs, priv, actionInfo, level, widget);
+        return Action_Complex(tgs, priv, slot, actionInfo, level, widget);
     } 
     else 
     {
@@ -187,10 +188,10 @@ async function Action(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: 
     }
 }
 
-async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, actionInfo: ActionInfo, level: number, widget: ILoadingWidgetOutput) :  Promise<TotalGameState>
+async function Action_Complex(tgs: TotalGameState, priv: PrivatePlayerInfo, slot: number, actionInfo: ActionInfo, level: number, widget: ILoadingWidgetOutput) :  Promise<TotalGameState>
 {    
     return await widget.StartLoading().then(() => connectContract()).
-    then(() => widget.GeneratingWitness()).then(() => generateWitness(ActionWASM, ActionZKey, ToValidMoveParameters(priv, tgs, actionInfo.type, level))).
+    then(() => widget.GeneratingWitness()).then(() => generateWitness(ActionWASM, ActionZKey, ToValidMoveParameters(priv, tgs, slot, actionInfo.type, level))).
     then(witness => widget.CallAPI_Witness(witness)).then(witness => zkWitches.ActionWithProof(actionInfo.target ?? 0, actionInfo.witchType ?? 0, witness.a, witness.b, witness.c, witness.inputs)).
     then(txn => widget.AwaitTransaction(txn)).then(txn => txn.wait()).
     then(() => widget.FetchState()).then(() => zkWitches.GetTGS()).
@@ -208,13 +209,13 @@ async function Action_Simple(actionInfo: ActionInfo, widget: ILoadingWidgetOutpu
     finally(() => widget.EndLoading());
 }
 
-async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo, widget: ILoadingWidgetOutput ) : Promise<TotalGameState>
+async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo, slot:number, widget: ILoadingWidgetOutput ) : Promise<TotalGameState>
 {
     let hasWitch : boolean = priv.witches[tgs.shared.accusationWitchType as number] == 1;
 
     if (!hasWitch) 
     {
-        return WitchProof_No(tgs, priv, widget);
+        return WitchProof_No(tgs, priv, slot, widget);
     } 
     else 
     {
@@ -222,10 +223,10 @@ async function WitchProof(tgs: TotalGameState, priv: PrivatePlayerInfo, widget: 
     }
 }
 
-async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo, widget: ILoadingWidgetOutput) : Promise<TotalGameState>
+async function WitchProof_No(tgs: TotalGameState, priv: PrivatePlayerInfo, slot: number, widget: ILoadingWidgetOutput) : Promise<TotalGameState>
 {    
     return await widget.StartLoading().then(() => connectContract()).
-    then(() => widget.GeneratingWitness()).then(() => generateWitness(NoWitchWASM, NoWitchZkey, ToNoWitchParameters(priv, tgs))).
+    then(() => widget.GeneratingWitness()).then(() => generateWitness(NoWitchWASM, NoWitchZkey, ToNoWitchParameters(priv, tgs, slot))).
     then(witness => widget.CallAPI_Witness(witness)).then(witness => zkWitches.RespondAccusation_NoWitch(witness.a, witness.b, witness.c, [witness.inputs[0], witness.inputs[1]])).
     then(txn => widget.AwaitTransaction(txn)).then(txn => txn.wait()).
     then(() => widget.FetchState()).then(() => zkWitches.GetTGS()).
@@ -265,6 +266,7 @@ async function KickActivePlayer(widget: ILoadingWidgetOutput) : Promise<TotalGam
 
 async function SetTgs(tgs_input: TotalGameState, widget: ILoadingWidgetOutput) : Promise<TotalGameState>
 {
+    console.log("input: ", tgs_input);
     return await widget.StartLoading().then(() => connectContract()).
     then(() =>  widget.CallAPI()).then(() => zkWitches.DEBUG_SetGameState(tgs_input)).
     then(txn => widget.AwaitTransaction(txn)).then(txn => txn.wait()).
@@ -280,9 +282,16 @@ export type EventRepresentation =
     timestamp : Date
 }
 
-function TODO_DATE() : Date
+async function GetEvents_AndPrevious(currentGameId: number) : Promise<EventRepresentation[]>
 {
-    return new Date();
+    let toReturn : EventRepresentation[] = [];
+    toReturn.concat(await GetEvents(currentGameId))
+    if (currentGameId > 0)
+    {
+        toReturn.concat(await GetEvents(currentGameId-1))
+    }
+    toReturn.sort((a,b) => a.timestamp.getTime() - b.timestamp.getTime())
+    return toReturn;
 }
 
 async function GetEvents(gameId : number) : Promise<EventRepresentation[]> 
@@ -291,48 +300,103 @@ async function GetEvents(gameId : number) : Promise<EventRepresentation[]>
     await connectContract();
 
     {
-        let joins = await zkWitches.queryFilter(zkWitches.filters.Join(gameId));
-        let joins_transformed = joins.map((e,i,a) => <EventRepresentation> { color: JOIN_COLOR_WHITE, text: "Player " + e.args.slot + " (" + e.args.player + ") has joined game " + e.args.gameId + ".", timestamp: TODO_DATE() });
+        console.log("joinEvents - no filter at all");
+
+        let joins = await zkWitches.queryFilter(zkWitches.filters.Join());
+        let joins_transformed = joins.map((e,i,a) => <EventRepresentation> { color: JOIN_COLOR_WHITE, text: "Player " + e.args.slot + " (" + e.args.player + ") has joined game " + e.args.gameId + ".", timestamp: new Date(e.args.timeStamp.toNumber()) });
         toReturn.concat(joins_transformed);
     }
 
     {
+        console.log("joinEvents - no block filter");
+
+        let joins = await zkWitches.queryFilter(zkWitches.filters.Join(gameId));
+        let joins_transformed = joins.map((e,i,a) => <EventRepresentation> { color: JOIN_COLOR_WHITE, text: "Player " + e.args.slot + " (" + e.args.player + ") has joined game " + e.args.gameId + ".", timestamp: new Date(e.args.timeStamp.toNumber()) });
+        toReturn.concat(joins_transformed);
+    }
+
+    {
+        console.log("GameStartevents");
+
     // There should only be one of them but whatever
-        let gameStarts = await zkWitches.queryFilter(zkWitches.filters.GameStart(gameId));
-        let starts_transformed = gameStarts.map((e,i,a) => <EventRepresentation> { color: GAMESTART_COLOR_WHITE, text: "Game " + e.args.gameId + " started.", timestamp: TODO_DATE() })
+        let gameStarts = await zkWitches.queryFilter(zkWitches.filters.GameStart(gameId), 0, 500);
+        let starts_transformed = gameStarts.map((e,i,a) => <EventRepresentation> { color: GAMESTART_COLOR_WHITE, text: "Game " + e.args.gameId + " started.", timestamp: new Date(e.args.timeStamp.toNumber()) })
         toReturn.concat(starts_transformed);
     }
 
     {
-        let actions = await zkWitches.queryFilter(zkWitches.filters.Action(gameId));
+
+        console.log("ActionEvents");
+
+        let actions = await zkWitches.queryFilter(zkWitches.filters.Action(gameId), 0, 500);
         let actions_transformed = actions.map((e,i,a) => convertAction(e));
         toReturn.concat(actions_transformed);
     }
 
     {
-        let victoryLoss = await zkWitches.queryFilter(zkWitches.filters.VictoryLoss(gameId));
+        console.log("victoryLossevents");
+
+        let victoryLoss = await zkWitches.queryFilter(zkWitches.filters.VictoryLoss(gameId), 0, 500);
         let victories_transformed = victoryLoss.map((e,i,a) => convertVictoryLoss(e));
         toReturn.concat(victories_transformed);
     }
 
+    {
+        console.log("AccusationResponseevents");
+
+        let accusations = await zkWitches.queryFilter(zkWitches.filters.AccusationResponse(gameId), 0, 500);
+        let accusations_transformed = accusations.map((e,i,a) => <EventRepresentation> { color: ACCUSATION_COLOR_WHITE, text: "Player " + e.args.slot + " (" + e.args.player + ") " + e.args.innocent ? " responded with proof that they don't have that witch." : " admitted that they have that witch.", timestamp: new Date(e.args.timeStamp.toNumber())});
+        toReturn.concat(accusations_transformed);
+    }
+
+    console.log("event count:", toReturn.length);
+
+
     return toReturn;
 }
-
 
 function convertAction(e : ActionEvent) : EventRepresentation 
 {
     let player = "Player " + e.args.slot + " (" + e.args.player + ") ";
-    let gatherFood = "gathered " + e.args.actionLevel
+    let actionString = LongPastTenseDescription(e.args.actionType, e.args.target, e.args.witchType, e.args.actionLevel);
 
     return <EventRepresentation> { 
         color: ACTION_COLORS[e.args.actionType],
-        text: "Player " + e.args.gameId + " started.", timestamp: TODO_DATE() })
-
+        text: player + actionString,
+        timestamp: new Date(e.args.timeStamp.toNumber())
+    };
 }
+
+// uint8 constant LOSS_SURRENDER = 0;
+// uint8 constant LOSS_KICK = 1;
+// uint8 constant LOSS_INQUISITION = 2;
+// uint8 constant LOSS_RESOURCES = 3;
+// uint8 constant VICTORY_RESOURCES = 4;
+// uint8 constant VICTORY_ELIMINATED = 5;
 
 function convertVictoryLoss(e : VictoryLossEvent) : EventRepresentation 
 {
+    let player = "Player " + e.args.slot + " (" + e.args.player + ") ";
 
+    let vl : string; 
+    switch(e.args.victoryLossType)
+    {
+        case(0) : vl = "lost due to surrender."; break;
+        case(1) : vl = "lost because they were kicked from the game due to inactivity."; break;
+        case(2) : vl = "lost because they couldn't pay the penalty for an inquisition."; break;
+        case(3) : vl = "lost because another player gathered enough resources and won."; break;
+        case(4) : vl = "won because they gathered enough resources."; break;
+        case(5) : vl = "won because all other players were eliminated."; break;
+        default: vl = "unknown."; break;
+    }
+    
+    let isVictory = e.args.victoryLossType >= 4;
+
+    return <EventRepresentation> { 
+        color: isVictory ? VICTORY_COLOR : LOSS_COLOR,
+        text: player + vl,
+        timestamp: new Date(e.args.timeStamp.toNumber())
+    };
 }
 
 export class ZKBackend implements IZKBackend 
@@ -342,6 +406,7 @@ export class ZKBackend implements IZKBackend
     private tgs?: TotalGameState;
     private address?: string;
     private isAdmin?: boolean;
+    private events?: EventRepresentation[];
 
     constructor(widgetIn: ILoadingWidgetOutput) 
     {
@@ -363,41 +428,53 @@ export class ZKBackend implements IZKBackend
         return this.isAdmin;
     }
 
+    GetEvents() : EventRepresentation[] 
+    {
+        return this.events ?? [];
+    }
+
     async RefreshStatus(): Promise<void> 
     {        
         this.tgs = await GetTgs(this.widget);        
         this.address = this.address ?? signerAddress;
         this.isAdmin = this.isAdmin ?? (await GetOwner() == this.address);
+        //this.events = await GetEvents_AndPrevious(this.tgs.shared.gameId as number);
         await this.widget.Bump(); 
     }
 
     async JoinGame(priv: PrivatePlayerInfo): Promise<void> 
     {
         this.tgs = await JoinGame(priv, this.widget);
+        await this.widget.Bump(); 
     }
 
-    async DoAction(priv: PrivatePlayerInfo, action: ActionInfo, level: number): Promise<void> 
+    async DoAction(priv: PrivatePlayerInfo, slot: number, action: ActionInfo, level: number): Promise<void> 
     {
-        this.tgs = await Action(this.tgs as TotalGameState, priv, action, level, this.widget);
+        this.tgs = await Action(this.tgs as TotalGameState, priv, slot, action, level, this.widget);
+        await this.widget.Bump(); 
     }
 
-    async RespondToAccusation(priv: PrivatePlayerInfo): Promise<void> 
+    async RespondToAccusation(priv: PrivatePlayerInfo, slot: number): Promise<void> 
     {
-        this.tgs = await WitchProof(this.tgs as TotalGameState, priv, this.widget);
+        this.tgs = await WitchProof(this.tgs as TotalGameState, priv, slot, this.widget);
+        await this.widget.Bump(); 
     }
 
     async Surrender(): Promise<void> 
     {
         this.tgs = await Surrender(this.widget);
+        await this.widget.Bump(); 
     }
 
     async KickActivePlayer(): Promise<void> 
     {
         this.tgs = await KickActivePlayer(this.widget);
+        await this.widget.Bump(); 
     }
 
     async DebugSetTotalGameState(tgs_input: TotalGameState): Promise<void> 
     {
         this.tgs = await SetTgs(tgs_input, this.widget);
+                await this.widget.Bump(); 
     }
 }
