@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { DefaultPPI, Empty, IZKBackend, PrivatePlayerInfo } from './zkWitchesTypes';
 import { LoadingWidgetOutput, ZKBackend } from './zkWitchesEthers';
 import { ethers } from 'ethers';
+import Welcome from './tabs/Welcome';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -118,7 +119,7 @@ export default function BasicTabs() {
         </Tabs>
       </Box>
       <TabPanel value={value} index={1}>
-        <Container>Welcome</Container>
+        <Container><Welcome backend={backend} isLoading={isLoading} loadingString={loadingString}/></Container>
       </TabPanel>
       <TabPanel value={value} index={2}>
         <Container><Play isLoading={isLoading} loadingString={loadingString} privMapper={privMapper} backend={backend} widget={widget} /></Container>

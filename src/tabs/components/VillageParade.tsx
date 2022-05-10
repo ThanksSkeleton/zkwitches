@@ -1,5 +1,13 @@
 import { Stack } from "@mui/material";
 import { PrivatePlayerInfo } from "../../zkWitchesTypes";
+import farmer from '../../images/Farmer.gif';
+import lumberjack from '../../images/Lumberjack.gif';
+import brigand from '../../images/Brigand.gif';
+import inquisitor from '../../images/Inquisitor.gif';
+import foodWitch from '../../images/FoodWitch.gif';
+import lumberWitch from '../../images/LumberWitch.gif';
+import brigandWitch from '../../images/BrigandWitch.gif';
+import inquisitorWitch from '../../images/InquisitorWitch.gif';
 
 export type ParadeProps = 
 {
@@ -19,7 +27,7 @@ function HasWitch(priv: PrivatePlayerInfo, citizen: number) : boolean
 export default function Parade(props: ParadeProps) 
 {
   return (
-    <Stack direction="column" spacing={4}>
+    <Stack direction="row" spacing={4}>
         <ParadeLine priv={props.priv} citizen={0} />
         <ParadeLine priv={props.priv} citizen={1} />
         <ParadeLine priv={props.priv} citizen={2} />
@@ -36,15 +44,15 @@ export type ParadeLineProps =
 
 function ParadeLine(props : ParadeLineProps) 
 {
-    let citizen_images : string[] = []
-    let witch_images : string[] = [] 
+    let citizen_images : string[] = [farmer, lumberjack, brigand, inquisitor];
+    let witch_images : string[] = [foodWitch, lumberWitch, brigandWitch, inquisitorWitch];
 
     return(
-        <Stack direction="column" spacing={4}>
-            { HasCitizen(props.priv, props.citizen, 1) && <img src={citizen_images[props.citizen]} />}
-            { HasCitizen(props.priv, props.citizen, 2) && <img src={citizen_images[props.citizen]} />}
-            { HasCitizen(props.priv, props.citizen, 3) && <img src={citizen_images[props.citizen]} />}
-            { HasWitch(props.priv, props.citizen) && <img src={witch_images[props.citizen]} />}
+        <Stack direction="row" spacing={5}>
+            { HasCitizen(props.priv, props.citizen, 1) && <img src={citizen_images[props.citizen]} style={{ width: 100 }} />}
+            { HasCitizen(props.priv, props.citizen, 2) && <img src={citizen_images[props.citizen]} style={{ width: 100 }} />}
+            { HasCitizen(props.priv, props.citizen, 3) && <img src={citizen_images[props.citizen]} style={{ width: 100 }} />}
+            { HasWitch(props.priv, props.citizen) && <img src={witch_images[props.citizen]} style={{ width: 100 }} />}
         </Stack>
     );
 }

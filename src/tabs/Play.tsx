@@ -11,6 +11,8 @@ import { ZKBackend, LoadingWidgetOutput, EventRepresentation } from "../zkWitche
 import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
 import { ethers } from "ethers";
 import { PrivMapper } from "../TabPanel";
+import Parade from "./components/VillageParade";
+import NoData from "./components/NoData";
 
 enum UIState 
 {
@@ -25,7 +27,7 @@ enum UIState
   OtherTurn,
 }
 
-function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, priv?: PrivatePlayerInfo ) : UIState
+export function GetUIState(loading: boolean, myAddress?: string, tgs?: TotalGameState, priv?: PrivatePlayerInfo ) : UIState
 {
   let slot = GetSlot(tgs, myAddress);
 
@@ -88,7 +90,7 @@ export default function Play(props: PlayProps)
       {state as UIState === UIState.MyAction as UIState && <MyAction slot={slot as number} tgs={tgs as TotalGameState} priv={priv as PrivatePlayerInfo} backend={props.backend} />}
       {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => props.backend.RespondToAccusation(priv as PrivatePlayerInfo, slot as number)} response_description={"Respond to Accusation"} />}
       
-      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={tgs as TotalGameState} address={props.backend.GetAddress() as string} />}
+      {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={tgs as TotalGameState} address={props.backend.GetAddress() as string} priv={priv} />}
 
       {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={props.loadingString}/>}
 
@@ -97,21 +99,6 @@ export default function Play(props: PlayProps)
   );
 }
 
-
-type NoDataProps = 
-{
-  action: React.MouseEventHandler<HTMLButtonElement>;
-}
-
-function NoData(props: NoDataProps) 
-{
-  return (
-    <Button
-    onClick={props.action} >
-    Fetch Data
-    </Button>
-  );
-}
 
 type CitizenSelectorProps = 
 {
@@ -133,6 +120,9 @@ function CitizenSelector(props: CitizenSelectorProps)
           <TypeSelector typeIndex={3} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
           <Divider variant="middle" />
           <CompleteMeter action={() => { props.privMapper.SaveActive(); props.backend.JoinGame(props.priv);  } } priv={props.priv} />
+          <Divider variant="middle" />
+          Your Village:
+          <Parade priv={props.priv} />
       </Stack>
   );
 }
@@ -258,6 +248,9 @@ function MyAction(props: MyActionProps) {
 
   return (
     <Stack direction="column" spacing={4}>
+      Your Village:
+      <Parade priv={props.priv} />
+      <Divider variant="middle" />
       <ActivePlayer slot={props.slot} tgs={props.tgs} priv={props.priv} backend={props.backend} />
       <Divider variant="middle" />
       <EnemyPlayer slot={enemyPlayerIds[0]} actionProps={props} />
@@ -413,12 +406,16 @@ function MyResponse(props: MyResponseProps)
 type OtherTurnProps = {
   tgs: TotalGameState
   address: string
+  priv?: PrivatePlayerInfo
 }
 
 function OtherTurn(props: OtherTurnProps) 
 {
   return (
     <Stack direction="column" spacing={4}>
+      {props.priv != undefined && "Your Village:" }
+      {props.priv != undefined && <Parade priv={props.priv} /> }      
+      {props.priv != undefined && <Divider variant="middle" /> }
       <OtherTurnPlayer slot={0} tgs={props.tgs} address={props.address}/>
       <OtherTurnPlayer slot={1} tgs={props.tgs} address={props.address}/>
       <OtherTurnPlayer slot={2} tgs={props.tgs} address={props.address}/>
