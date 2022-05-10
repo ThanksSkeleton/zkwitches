@@ -54,6 +54,9 @@ export default function WalletConnector() {
   const changeChainId = async () => {
     let chainId = await ethereum.request({ method: 'eth_chainId' });
 
+    console.log("target chain: ", targetChain().connection.chainId);
+    console.log("current chain: ", chainId);
+
     if (chainId !== targetChain().connection.chainId) {
       try {
         await ethereum.request({

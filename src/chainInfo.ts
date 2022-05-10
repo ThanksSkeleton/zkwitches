@@ -2,7 +2,7 @@ const harmonyProductionChain =
 {
   connection: 
   {
-    chainId:'0x63564C40',
+    chainId:'0x63564c40',
     chainName: 'Harmony',
     nativeCurrency: {
       name: 'ONE',
