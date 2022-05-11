@@ -56,3 +56,24 @@ function ParadeLine(props : ParadeLineProps)
         </Stack>
     );
 }
+
+type InquisitionLineProps = 
+{
+    witchType? : number
+}
+
+export function InquisitionLine(props: InquisitionLineProps)
+{
+    let citizen_images : string[] = [farmer, lumberjack, brigand, inquisitor];
+    let witch_images : string[] = [foodWitch, lumberWitch, brigandWitch, inquisitorWitch];
+
+    return(
+        <Stack direction="row" spacing={5}>
+            <img src={citizen_images[3]} style={{ width: 100 }} />
+            <img src={citizen_images[3]} style={{ width: 100 }} />
+            <img src={citizen_images[3]} style={{ width: 100 }} />
+
+            { props.witchType != undefined && <img src={witch_images[props.witchType]} style={{ width: 100 }} /> }
+        </Stack>
+    );
+}

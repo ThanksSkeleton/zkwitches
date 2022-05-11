@@ -2,7 +2,7 @@ import { useState } from "react";
 import Button from "@mui/material/Button";
 import Stack from '@mui/material/Stack';
 import TextField from "@mui/material/TextField";
-import { Checkbox, Divider} from "@mui/material";
+import { Checkbox, Divider, Typography} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
@@ -11,7 +11,7 @@ import { ZKBackend, LoadingWidgetOutput, EventRepresentation } from "../zkWitche
 import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
 import { ethers } from "ethers";
 import { PrivMapper } from "../TabPanel";
-import Parade from "./components/VillageParade";
+import Parade, { InquisitionLine } from "./components/VillageParade";
 import NoData from "./components/NoData";
 
 enum UIState 
@@ -88,7 +88,7 @@ export default function Play(props: PlayProps)
 
       {state as UIState === UIState.CitizenSelector as UIState && <CitizenSelector priv={priv as PrivatePlayerInfo} privMapper={props.privMapper} backend={props.backend} widget={props.widget}/>}
       {state as UIState === UIState.MyAction as UIState && <MyAction slot={slot as number} tgs={tgs as TotalGameState} priv={priv as PrivatePlayerInfo} backend={props.backend} />}
-      {state as UIState === UIState.MyResponse as UIState && <MyResponse action={() => props.backend.RespondToAccusation(priv as PrivatePlayerInfo, slot as number)} response_description={"Respond to Accusation"} />}
+      {state as UIState === UIState.MyResponse as UIState && <MyResponse slot={slot as number} tgs={tgs as TotalGameState} priv={priv as PrivatePlayerInfo} backend={props.backend}  />}
       
       {state as UIState === UIState.OtherTurn as UIState && <OtherTurn tgs={tgs as TotalGameState} address={props.backend.GetAddress() as string} priv={priv} />}
 
@@ -110,8 +110,6 @@ type CitizenSelectorProps =
 
 function CitizenSelector(props: CitizenSelectorProps) 
 {
- 
-
   return (
       <Stack direction="column" spacing = {1}>
           <TypeSelector typeIndex={0} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
@@ -126,7 +124,6 @@ function CitizenSelector(props: CitizenSelectorProps)
       </Stack>
   );
 }
-
 
 function valueText(value : number, index: number) 
 {   
@@ -383,19 +380,30 @@ function ActionTableau(props: TableauProps) {
 // MyResponse
 type MyResponseProps = 
 {
-  action: React.MouseEventHandler<HTMLButtonElement>;
-
-  response_description: string
+  tgs: TotalGameState,
+  priv: PrivatePlayerInfo,
+  slot: number,
+  backend: IZKBackend,
 }
 
 function MyResponse(props: MyResponseProps) 
 {
+  let accusationMessage = "You have been accused by Player " + props.tgs.shared.playerAccusing + " of having a " + type_string[props.tgs.shared.accusationWitchType as number] + " witch.";
+  let guilty = props.priv.witches[props.tgs.shared.accusationWitchType as number] == 1;
+  let truthMessage = "The truth is... " + (guilty ? "you are guilty! And there is no escaping justice!" : "you are innocent.");
+  let buttonString = guilty ? "Admit Guilt, pay 2 food and 2 lumber, and lose your witch." : "Prove your innocence and pay no penalty.";
+  let witchSymbolInquisition = guilty ? props.tgs.shared.accusationWitchType as number : undefined;
+
   return (
-    <Button
-    onClick={props.action}
-    >
-    {props.response_description}
-    </Button>
+    <Stack direction="row" spacing={4}>
+      <InquisitionLine witchType={witchSymbolInquisition} />
+      <Typography>{accusationMessage}</Typography>
+      <Typography>{truthMessage}</Typography>
+      <Divider variant="middle" />
+      <Button onClick={() => props.backend.RespondToAccusation(props.priv, props.slot)}>
+        {buttonString}
+      </Button>
+    </Stack>
 );
 }
 
@@ -413,7 +421,7 @@ function OtherTurn(props: OtherTurnProps)
 {
   return (
     <Stack direction="column" spacing={4}>
-      {props.priv != undefined && "Your Village:" }
+      {props.priv != undefined && <Typography>"Your Village:"</Typography> }
       {props.priv != undefined && <Parade priv={props.priv} /> }      
       {props.priv != undefined && <Divider variant="middle" /> }
       <OtherTurnPlayer slot={0} tgs={props.tgs} address={props.address}/>
@@ -457,7 +465,6 @@ function OtherTurnPlayer(props: OtherTurnPlayerProps)
     );
 }
 
-
 // LOADINGSCREEN
 
 type LoadingScreenProps = {
@@ -467,27 +474,6 @@ type LoadingScreenProps = {
 function LoadingScreen(props: LoadingScreenProps) 
 {
   return (<TextField label={props.description} variant="outlined" InputProps={{ readOnly: true,}} />); 
-}
-
-// DebugMenu 
-
-type EventListProps = 
-{
-  events: EventRepresentation[]
-}
-
-function EventList(props: EventListProps) 
-{
-    let chips = []
-    for (let i = 0; i< props.events.length; i++) 
-    {
-      chips.push(<Chip label={props.events[i].text + " " + props.events[i].timestamp} color="default"></Chip>)
-    }
-    return (
-      <Stack direction="row" spacing = {1}>
-        {chips}
-      </Stack>
-      );
 }
 
 type DebugMenuProps = 
@@ -516,5 +502,3 @@ function DebugMenu(props: DebugMenuProps)
       <Button onClick={() => props.backend.DebugSetTotalGameState(respondToAccusation)}>DEMO: RESPOND TO ACCUSATION</Button>
     </Stack>);
 }
-
-

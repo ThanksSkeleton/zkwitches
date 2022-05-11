@@ -217,9 +217,6 @@ export function ToNoWitchParameters(priv: PrivatePlayerInfo, tgs: TotalGameState
      };
 }
 
-
-
-
 export function ToValidMoveParameters(priv: PrivatePlayerInfo, tgs: TotalGameState, slot: number, citizenType: number, requiredCitizenCount: number) : ValidMoveWitnessParameters 
 {
     return <ValidMoveWitnessParameters>
@@ -258,64 +255,4 @@ export interface IZKBackend
     GetEvents() : EventRepresentation[] 
 
     DebugSetTotalGameState(tgs: TotalGameState) : Promise<void>
-}
-
-export class EmptyZKBackend implements IZKBackend 
-{
-
-
-    private tgs?: TotalGameState;
-
-    GetAddress() : string | undefined 
-    {
-        return "";
-    }
-
-    GetTotalGameState(): TotalGameState | undefined
-    {
-        return this.tgs;
-    }
-
-    IsAdmin(): boolean | undefined 
-    {
-        return true;
-    }
-
-    GetEvents(): EventRepresentation[] 
-    {
-        return [];
-    }
-
-    RefreshStatus(): Promise<void> 
-    {
-        return new Promise(r => { setTimeout(r, 2000)});
-    }
-
-    JoinGame(priv: PrivatePlayerInfo): Promise<void> 
-    {
-        return this.RefreshStatus();
-    }
-
-    DoAction(priv: PrivatePlayerInfo, slot: number, action: ActionInfo): Promise<void> {
-        return this.RefreshStatus();
-    }
-
-    RespondToAccusation(priv: PrivatePlayerInfo, slot:number): Promise<void> {
-        return this.RefreshStatus();
-    }
-
-    Surrender(): Promise<void> {
-        return this.RefreshStatus();
-    }
-
-    KickActivePlayer(): Promise<void> 
-    {
-        return this.RefreshStatus();
-    }
-
-    DebugSetTotalGameState(tgsinput: TotalGameState): Promise<void> 
-    {
-        this.tgs = tgsinput;
-        return this.RefreshStatus();
-    }
 }
