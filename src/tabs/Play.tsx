@@ -119,7 +119,7 @@ function CitizenSelector(props: CitizenSelectorProps)
           <Divider variant="middle" />
           <CompleteMeter action={() => { props.privMapper.SaveActive(); props.backend.JoinGame(props.priv);  } } priv={props.priv} />
           <Divider variant="middle" />
-          Your Village:
+          <Typography>Your Village:</Typography>
           <Parade priv={props.priv} />
       </Stack>
   );
