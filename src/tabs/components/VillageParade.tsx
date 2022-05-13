@@ -12,6 +12,8 @@ import inquisitorWitch from '../../images/InquisitorWitch.gif';
 export type ParadeProps = 
 {
     priv: PrivatePlayerInfo
+
+    dummyBumper?: number
 }
 
 function HasCitizen(priv: PrivatePlayerInfo, citizen: number, count: number) : boolean 

@@ -110,17 +110,19 @@ type CitizenSelectorProps =
 
 function CitizenSelector(props: CitizenSelectorProps) 
 {
+  let [dummyBumper, setDummyBumper] = useState(0);
+
   return (
       <Stack direction="column" spacing = {1}>
-          <TypeSelector typeIndex={0} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
-          <TypeSelector typeIndex={1} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
-          <TypeSelector typeIndex={2} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
-          <TypeSelector typeIndex={3} priv={props.priv} privMapper={props.privMapper} widget={props.widget} />
+          <TypeSelector typeIndex={0} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
+          <TypeSelector typeIndex={1} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
+          <TypeSelector typeIndex={2} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
+          <TypeSelector typeIndex={3} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
           <Divider variant="middle" />
           <CompleteMeter action={() => { props.privMapper.SaveActive(); props.backend.JoinGame(props.priv);  } } priv={props.priv} />
           <Divider variant="middle" />
           <Typography>Your Village:</Typography>
-          <Parade priv={props.priv} />
+          <Parade priv={props.priv} dummyBumper={dummyBumper} />
       </Stack>
   );
 }
@@ -173,18 +175,25 @@ type TypeSelectorProps =
   priv: PrivatePlayerInfo;
   privMapper: PrivMapper;
   widget: LoadingWidgetOutput
+
+  setDummy: React.Dispatch<React.SetStateAction<number>>
 }
 
 function TypeSelector(props: TypeSelectorProps) {
 
   let labelString = type_string[props.typeIndex];
+
+  let [checkboxState, setCheckboxState] = useState(props.priv.witches[props.typeIndex]);
   
   const handleChangeCheckBox = (event: any) => 
   {
     console.log("checkbox newValue ", event.target.checked);
-    props.priv.witches[props.typeIndex] = (event.target.checked ? 0 : 1);
+    let newState = (event.target.checked ? 1 : 0);
+    props.priv.witches[props.typeIndex] = newState;
     console.log("checkbox priv ", props.priv);
     props.privMapper.SaveActive();
+    setCheckboxState(newState);
+    props.setDummy(Math.random()*10000); // TODO STUPID
     props.widget.Bump();
   };
 
@@ -215,7 +224,7 @@ function TypeSelector(props: TypeSelectorProps) {
           />
           <TextField label="Witch" variant="outlined" InputProps={{readOnly: true,}} />
           <Checkbox
-          checked={props.priv.witches[props.typeIndex] == 1}
+          checked={checkboxState == 1}
           onClick={handleChangeCheckBox}
           // color={props.color} TODO FIX
           // label="Witch"
