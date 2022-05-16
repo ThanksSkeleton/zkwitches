@@ -113,6 +113,7 @@ function CitizenSelector(props: CitizenSelectorProps)
 
   return (
       <Stack direction="column" spacing = {1}>
+          <Typography>Choose the citizens that will be in your village:</Typography> 
           <TypeSelector typeIndex={0} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
           <TypeSelector typeIndex={1} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
           <TypeSelector typeIndex={2} priv={props.priv} privMapper={props.privMapper} widget={props.widget} setDummy={setDummyBumper} />
@@ -143,26 +144,48 @@ function CompleteMeter(props: CompleteMeterProps)
 
   let total = Total(props.priv);
 
+  let total_correct = total == 7;
+
+  function wrongString(total: number) : string 
+  {
+    if (total > 7) 
+    {
+      return "too many citizens"
+    } 
+    else if (total < 7) 
+    {
+      return "select more citizens"
+    } 
+    else 
+    {
+      return "";
+    }
+  } 
+
   return (
-      <Stack direction="row"
-      spacing = {1}>            
-          <Slider
-              aria-label="Total Meter"
-              value={total}
-              getAriaValueText={valueText}
-              valueLabelDisplay="auto"
-              step={1}
-              min={0}
-              max={8}
-              disabled
-              color={total === 7 ? "primary" : "secondary"} 
-              marks={sliderMark}
-          />
-          <Button
-              onClick={props.action}
-              disabled={!(total === 7)}>
-              Submit
-          </Button>
+      <Stack direction="column"
+      spacing = {1}>        
+        <Stack direction="row"
+        spacing = {1}>            
+            <Slider
+                aria-label="Total Meter"
+                value={total}
+                getAriaValueText={valueText}
+                valueLabelDisplay="auto"
+                step={1}
+                min={0}
+                max={8}
+                disabled
+                color={total_correct ? "primary" : "secondary"} 
+                marks={sliderMark}
+            />
+            <Button
+                onClick={props.action}
+                disabled={!(total_correct)}>
+                Submit
+            </Button>
+        </Stack>            
+        <Typography>{wrongString(total)}</Typography>
       </Stack>
   );
 }
@@ -314,12 +337,14 @@ function PlayerIndicator(props : PlayerIndicatorProps)
   let slotText = "Player " + props.slot;
   let colon = props.is_player ? " (You):" : ":";
   let addressString = props.is_empty ? "empty" : (props.address.substring(0, 6) + "...");
+  let eliminatedString = (props.tgs.players[props.slot].isAlive || props.is_empty) ? "" : "(Eliminiated)"
 
   return (
     <Stack direction="row"
     spacing = {1}>
-      <TextField label={ slotText + colon + addressString } variant="outlined" InputProps={{ readOnly: true,}} />
+      <Typography>{ slotText + colon + addressString }</Typography>
       <ResourceIndicator food={props.tgs.players[props.slot].food as number} lumber={props.tgs.players[props.slot].lumber as number} />
+      <Typography>{eliminatedString}</Typography>
     </Stack>
   )
 }
@@ -402,7 +427,7 @@ function MyResponse(props: MyResponseProps)
   let witchSymbolInquisition = guilty ? props.tgs.shared.accusationWitchType as number : undefined;
 
   return (
-    <Stack direction="row" spacing={4}>
+    <Stack direction="column" spacing={4}>
       <InquisitionLine witchType={witchSymbolInquisition} />
       <Typography>{accusationMessage}</Typography>
       <Typography>{truthMessage}</Typography>
@@ -428,7 +453,7 @@ function OtherTurn(props: OtherTurnProps)
 {
   return (
     <Stack direction="column" spacing={4}>
-      {props.priv != undefined && <Typography>"Your Village:"</Typography> }
+      {props.priv != undefined && <Typography>Your Village:</Typography> }
       {props.priv != undefined && <Parade priv={props.priv} /> }      
       {props.priv != undefined && <Divider variant="middle" /> }
       <OtherTurnPlayer slot={0} tgs={props.tgs} address={props.address}/>

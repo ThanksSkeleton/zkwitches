@@ -72,7 +72,7 @@ function Documentation()
   ## Player's Summary of the Game
   This is a 4 player, turn based, secret information dapp card game with resource management and social deduction. The game is played on chain, and uses zk (zero knowledge) proofs to allow players to make validated moves without revealing their secrets.
   
-  The objective of the game is to become the most prosperous town by accumulating 10 food and 10 lumber. 
+  The objective of the game is to become the most prosperous village by accumulating 10 food and 10 lumber. 
   
   At the start of the game, each player makes a secret selection of their village's citizens: a total of 7 citizens. 
   
@@ -102,7 +102,7 @@ function Documentation()
   
   Can eliminate the witches of other players.
   
-  In an inquisition, the targeted player proves they do not have a specific witch. If they cannot, they pay 2 food, and 2 lumber to the inquisitor, and their witch flees forever. If they cannot pay the inquisitor's fee, they are eliminated.
+  In an inquisition, the targeted village proves they do not have a specific witch. If they cannot, they pay 2 food, and 2 lumber to the inquisitor, and their witch flees forever. If they cannot pay the inquisitor's fee, the village is eliminated.
   
   0/1/2/3 inquisitors can launch a inquisition by spending 3/2/1/0 food and lumber.
   
