@@ -40,12 +40,16 @@ type witness =
 
 async function generateWitness(wasmfile: string, zkeyPath: string, inputData: any) : Promise<witness> {
     let errorString = 'Fail to generate witness.'
+    console.log("Types generateWitness");
+    console.log("wasmfile: string, zkeyPath: string, inputData: any");
+    console.log("Values generateWitness");
+    console.log("wasmfile: " + wasmfile + ", zkeyPath: " + zkeyPath + ", inputData: " + JSON.stringify(inputData));
 
     let calldata = await generateCalldata(wasmfile, zkeyPath, inputData);
     if (!calldata) throw errorString;
     console.log('calldata generated');
     console.log("calldata Raw:");
-    console.log(calldata);
+    console.log(JSON.stringify(calldata));
     let a = calldata[0];
     let b = calldata[1];
     let c = calldata[2];
@@ -54,7 +58,7 @@ async function generateWitness(wasmfile: string, zkeyPath: string, inputData: an
     let toReturn = { a, b, c, inputs };
 
     console.log("Calldata pushed");
-    console.log(toReturn);
+    console.log(JSON.stringify(toReturn));
 
     return toReturn;
 }

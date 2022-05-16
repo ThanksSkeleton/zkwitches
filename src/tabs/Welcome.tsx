@@ -33,7 +33,7 @@ export default function Welcome(props: WelcomeProps)
 
   let slot = GetSlot(tgs, props.backend.GetAddress());
 
-  let targetString = "Targeting the " + targetChain().name + " chain. Connect with your wallet to continue.";
+  let targetString = "Targeting the " + targetChain().name + " chain. Connect with a wallet to continue.";
   let joinGameMessage = "zkWitches Lobbies: 0/1 full. A game is currently starting! Click on the 'Play' tab."
   let gameFullMessage = "zkWitches Lobbies: 1/1 active. All lobbies are currently full. You can spectate using the 'Play' tab."
 

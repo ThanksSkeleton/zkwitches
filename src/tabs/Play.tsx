@@ -76,7 +76,7 @@ export default function Play(props: PlayProps)
   let priv : PrivatePlayerInfo | undefined;
   if (tgs != null)
   {
-    priv = props.privMapper.Get(tgs.shared.gameId as number);
+    priv = props.privMapper.Get(tgs.shared.gameId as number, props.backend.GetAddress() as string);
   }
 
   let state : UIState = GetUIState(props.isLoading, props.backend.GetAddress(), props.backend.GetTotalGameState(), priv);
@@ -248,7 +248,6 @@ type MyActionProps =
 
 function MyAction(props: MyActionProps) {
 
-  // TODO FIX
   let allPlayerIds = [0,1,2,3];
   let enemyPlayerIds = allPlayerIds.filter((value, index, arr) => value != props.slot);
 
@@ -359,10 +358,10 @@ type TableauProps =
 
 function ActionTableau(props: TableauProps) {
 
-    let actionInfo : ActionInfo = { type : props.type, target : props.target ?? -1 , witchType : props.witchType ?? -1 };
+    let actionInfo : ActionInfo = { type : props.type, target : props.target ?? 5, witchType : props.witchType ?? 5 };
 
     let buttons = [];
-    for(var actionLevel = 3; actionLevel>=0; actionLevel--) 
+    for(let actionLevel : number = 3; actionLevel>=0; actionLevel--) 
     {
       buttons.push(<Button
       onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, props.actionProps.slot, actionInfo, actionLevel)}

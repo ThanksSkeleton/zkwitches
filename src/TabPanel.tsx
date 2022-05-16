@@ -52,9 +52,9 @@ export class PrivMapper
 
   constructor() {}
 
-  public Get(gameId : number): PrivatePlayerInfo
+  public Get(gameId : number, address: string): PrivatePlayerInfo
   {
-    this.key = "GameId"+gameId;
+    this.key = "GameId"+gameId+"Address"+address;
 
     if (localStorage.getItem(this.key))
     {
