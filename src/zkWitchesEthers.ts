@@ -9,6 +9,7 @@ import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameS
 import { generateCalldata } from './zkWitches_js/generate_calldata';
 import { Ownable } from "./Ownable";
 import { ACCUSATION_COLOR_WHITE, ACTION_COLORS, GAMESTART_COLOR_WHITE, JOIN_COLOR_WHITE, LongPastTenseDescription, LOSS_COLOR, VICTORY_COLOR } from "./Descriptions";
+import { PrivMapper } from "./PrivMapper";
 
 let zkWitches: ZkWitches;
 let access : Ownable;

@@ -9,10 +9,9 @@ import Chip from '@mui/material/Chip';
 import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS, Empty, GetSlot } from "../zkWitchesTypes";
 import { ZKBackend, LoadingWidgetOutput, EventRepresentation } from "../zkWitchesEthers";
 import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
-import { ethers } from "ethers";
-import { PrivMapper } from "../TabPanel";
 import Parade, { InquisitionLine } from "./components/VillageParade";
 import NoData from "./components/NoData";
+import { PrivMapper } from "../PrivMapper";
 
 enum UIState 
 {
@@ -497,6 +496,11 @@ function DebugMenu(props: DebugMenuProps)
   let actionReady = StartActionTGS(props.address);
   let respondToAccusation = RespondToAccusationTGS(props.address);
 
+  function setDefaultPPI() 
+  {
+    (new PrivMapper()).ForceOverride(0, (props.backend.GetAddress() as string), DefaultPPI());
+  } 
+
   return (
     <Stack direction="row" spacing = {1} sx={{
     position: "fixed",
@@ -505,8 +509,8 @@ function DebugMenu(props: DebugMenuProps)
     }}
     >
       <TextField label="Choose Demo:" variant="outlined" InputProps={{ readOnly: true,}} />
-      <Button onClick={() => props.backend.DebugSetTotalGameState(start)}>DEMO: JOIN</Button>
-      <Button onClick={() => props.backend.DebugSetTotalGameState(actionReady)}>DEMO: ACTION</Button>
-      <Button onClick={() => props.backend.DebugSetTotalGameState(respondToAccusation)}>DEMO: RESPOND TO ACCUSATION</Button>
+      <Button onClick={() => { setDefaultPPI(); props.backend.DebugSetTotalGameState(start); }}>DEMO: JOIN</Button>
+      <Button onClick={() => { setDefaultPPI(); props.backend.DebugSetTotalGameState(actionReady)}}>DEMO: ACTION</Button>
+      <Button onClick={() =>  { setDefaultPPI(); props.backend.DebugSetTotalGameState(respondToAccusation)}}>DEMO: RESPOND TO ACCUSATION</Button>
     </Stack>);
 }
