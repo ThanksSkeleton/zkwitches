@@ -1,4 +1,4 @@
-import { BigNumberish, ethers } from "ethers";
+import { BigNumber, BigNumberish, ethers } from "ethers";
 import zkWitchesAbi from './import/zkWitches.json';
 import accessAbi from "./Ownable.json"
 import { ActionEvent, VictoryLossEvent, ZkWitches } from './import/contracts/ZkWitches/ZkWitches' 
@@ -479,7 +479,9 @@ export class ZKBackend implements IZKBackend
 
     async DebugSetTotalGameState(tgs_input: TotalGameState): Promise<void> 
     {
+        tgs_input.shared.gameId = (this.tgs?.shared.gameId as BigNumber).add(1);
+        console.log("Incrementing GameId to ", tgs_input.shared.gameId)
         this.tgs = await SetTgs(tgs_input, this.widget);
-                await this.widget.Bump(); 
+        await this.widget.Bump(); 
     }
 }

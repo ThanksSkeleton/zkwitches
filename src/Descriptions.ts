@@ -126,6 +126,6 @@ export function IsEnabled(tgs: TotalGameState, priv: PrivatePlayerInfo, slot:num
     } 
     else 
     {
-        return HaveCitizens(priv, tgs, slot, INQUISITION, 0) && HasFoodAndLumber(tgs, inquisitionCosts[actionLevel], slot) && WitchAlive(tgs, actionTarget, witchType);
+        return HaveCitizens(priv, tgs, slot, INQUISITION, actionLevel) && HasFoodAndLumber(tgs, inquisitionCosts[actionLevel], slot) && WitchAlive(tgs, actionTarget, witchType);
     }
 }

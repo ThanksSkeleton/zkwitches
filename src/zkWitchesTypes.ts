@@ -95,9 +95,9 @@ function Test_UserPlayer() : PlayerGameState
     return <PlayerGameState> 
     {
         isAlive: true,
-        handCommitment : BigNumber.from("250494017945128099137172715300877349886951345608512250505894554758779604241"),
-        food: BigNumber.from(0),
-        lumber: BigNumber.from(0),
+        handCommitment : BigNumber.from("2390925104012223983963800327130789632339155470135800695934245945237228735823"),
+        food: BigNumber.from(2),
+        lumber: BigNumber.from(2),
         WitchAlive: [true,true,true,true]
     }
 }
@@ -108,8 +108,8 @@ function Test_BogusPlayer(index: number) : PlayerGameState
     {
         isAlive: true,
         handCommitment : BigNumber.from(index), 
-        food: BigNumber.from(0),
-        lumber: BigNumber.from(0),
+        food: BigNumber.from(2),
+        lumber: BigNumber.from(2),
         WitchAlive: [true,true,true,true]
     }
 }
@@ -179,7 +179,7 @@ export function DefaultPPI() : PrivatePlayerInfo
     return <PrivatePlayerInfo> 
     {
         salt: "1157920892373161954235709850086879078532699846656405640394575840791312963995",
-        citizens: [0, 1, 2, 3],
+        citizens: [2, 1, 2, 1],
         witches: [0, 1, 0, 0]
     }
 }

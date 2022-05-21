@@ -13,6 +13,7 @@ import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
 import Parade, { InquisitionLine } from "./components/VillageParade";
 import NoData from "./components/NoData";
 import { PrivMapper } from "../PrivMapper";
+import { BigNumber } from "ethers/lib/ethers";
 
 enum UIState 
 {
@@ -94,7 +95,7 @@ export default function Play(props: PlayProps)
 
       {state as UIState === UIState.LoadingScreen as UIState && <LoadingScreen description={props.loadingString}/>}
 
-      { props.backend.IsAdmin() && <DebugMenu backend={props.backend} address={props.backend.GetAddress() as string}/> }
+      { props.backend.IsAdmin() && <DebugMenu backend={props.backend} address={props.backend.GetAddress() as string} oldTgs={tgs as TotalGameState}/> }
     </Stack>
   );
 }
@@ -388,12 +389,15 @@ function ActionTableau(props: TableauProps) {
     let buttons = [];
     for(let actionLevel : number = 3; actionLevel>=0; actionLevel--) 
     {
-      buttons.push(<Button
-      onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, props.actionProps.slot, actionInfo, actionLevel)}
-      disabled={!IsEnabled(props.actionProps.tgs, props.actionProps.priv, props.actionProps.slot, actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
-      >
-      {ShortDescription(actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
-      </Button>)
+      buttons.push(
+        <Button
+        key={actionLevel}
+        onClick={() => props.actionProps.backend.DoAction(props.actionProps.priv, props.actionProps.slot, actionInfo, actionLevel)}
+        disabled={!IsEnabled(props.actionProps.tgs, props.actionProps.priv, props.actionProps.slot, actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
+        >
+          {ShortDescription(actionInfo.type, actionInfo.target, actionInfo.witchType, actionLevel)}
+        </Button>
+        )
     }
 
     return (
@@ -516,6 +520,7 @@ type DebugMenuProps =
 {
   backend : IZKBackend
   address: string
+  oldTgs: TotalGameState
 }
 
 function DebugMenu(props: DebugMenuProps) 
@@ -524,10 +529,11 @@ function DebugMenu(props: DebugMenuProps)
   let start = DefaultTGS();
   let actionReady = StartActionTGS(props.address);
   let respondToAccusation = RespondToAccusationTGS(props.address);
+  let nextGame = (props.oldTgs.shared.gameId as BigNumber).add(1).toNumber();
 
-  function setDefaultPPI() 
+  function setDefaultPPI(nextGame: number) 
   {
-    (new PrivMapper()).ForceOverride(0, (props.backend.GetAddress() as string), DefaultPPI());
+    (new PrivMapper()).ForceOverride(nextGame, (props.backend.GetAddress() as string), DefaultPPI());
   } 
 
   return (
@@ -538,8 +544,8 @@ function DebugMenu(props: DebugMenuProps)
     }}
     >
       <TextField label="Choose Demo:" variant="outlined" InputProps={{ readOnly: true,}} />
-      <Button onClick={() => { setDefaultPPI(); props.backend.DebugSetTotalGameState(start); }}>DEMO: JOIN</Button>
-      <Button onClick={() => { setDefaultPPI(); props.backend.DebugSetTotalGameState(actionReady)}}>DEMO: ACTION</Button>
-      <Button onClick={() =>  { setDefaultPPI(); props.backend.DebugSetTotalGameState(respondToAccusation)}}>DEMO: RESPOND TO ACCUSATION</Button>
+      <Button onClick={() => { setDefaultPPI(nextGame); props.backend.DebugSetTotalGameState(start); }}>DEMO: JOIN</Button>
+      <Button onClick={() => { setDefaultPPI(nextGame); props.backend.DebugSetTotalGameState(actionReady)}}>DEMO: ACTION</Button>
+      <Button onClick={() =>  { setDefaultPPI(nextGame); props.backend.DebugSetTotalGameState(respondToAccusation)}}>DEMO: RESPOND TO ACCUSATION</Button>
     </Stack>);
 }
