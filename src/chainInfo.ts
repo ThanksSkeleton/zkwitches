@@ -65,7 +65,7 @@ const harmonyTestnetChain : ChainInfo =
   },
   shortName: "HarmonyTest",
   longName: "Harmony Testnet",
-  address: "0xE67d92E3fbd9Cb4BC90d58D768D199DB10BB0216",
+  address: "0xB6Ef32a400b06A8245D90c0B9C862ACbD3cEDE07",
   addHyperlink: "https://docs.harmony.one/home/general/wallets/browser-extensions-wallets/metamask-wallet/adding-harmony",
   getCoinsHyperlink: "https://faucet.pops.one/"
 };
