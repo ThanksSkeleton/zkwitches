@@ -44,7 +44,7 @@ const harmonyProductionChain : ChainInfo =
   },
   shortName: "HarmonyProd",
   longName: "Harmony Production",
-  address: "0xA7EA651082212d43cd86A338F9bD7D98339b59BA",
+  address: "0x7607A417a3931FD5b985f4042c189105a4B93023",
   addHyperlink: "https://docs.harmony.one/home/general/wallets/browser-extensions-wallets/metamask-wallet/adding-harmony",
   getCoinsHyperlink: "https://www.finder.com/how-to-buy-harmony"
 };
