@@ -37,7 +37,7 @@ export default function Welcome(props: WelcomeProps)
 
   let targetChainObject = targetChain();
 
-  let targetString = "ZKWitches is played on the " + targetChainObject.longName + " blockchain.";
+  let targetString = "This instance of ZKWitches is targeted to the " + targetChainObject.longName + " blockchain.";
 
   let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
   let howToGetCoints = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
