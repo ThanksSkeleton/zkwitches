@@ -6,10 +6,6 @@ export default function About() {
   # zkWitches: A Social Deduction Game Played On-Chain using ZKProofs
   For up to date documentation, check the [GitHub](https://github.com/ThanksSkeleton/zkwitches).
 
-  ## Demo Mode
-
-  Check out the details of Demo Mode [here](https://github.com/ThanksSkeleton/zkwitches/blob/main/docs/Demo_Mode.md).
-
   ## Acknowledgements / Credits
   Dev+UI : ThanksSkeleton ThanksSkeleton#9425 (Me!)
 
@@ -17,7 +13,7 @@ export default function About() {
 
   Instruction by ZKU/zkDao
 
-  Project Template: https://github.com/socathie/zkPhoto-ui
+  Project Template: https://github.com/socathie/zkPhoto-ui by socathie
 
   Royalty Free Town Pixel Art and Pixel Art Citizens by ansimuz 
 

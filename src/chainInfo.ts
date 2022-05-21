@@ -1,4 +1,34 @@
-const harmonyProductionChain = 
+
+import 'dotenv/config' // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import express from 'express'
+
+export type ChainInfo =
+{
+  connection : ChainInfoInner
+  shortName: string,
+  longName : string,
+  address: string,
+  addHyperlink: string,
+  getCoinsHyperlink: string
+}
+
+export type ChainInfoInner =
+{
+  chainId: string,
+  chainName: string,
+  nativeCurrency: CurrencyInfo,
+  rpcUrls: string[],
+  blockExplorerUrls: string[],
+}
+
+export type CurrencyInfo =
+{
+  name: string,
+  symbol: string,
+  decimals: number
+}
+
+const harmonyProductionChain : ChainInfo = 
 {
   connection: 
   {
@@ -12,12 +42,14 @@ const harmonyProductionChain =
     rpcUrls: ['https://api.harmony.one'],
     blockExplorerUrls: ['https://explorer.harmony.one']
   },
-  name: "Harmony Production",
-  address: "0xA7EA651082212d43cd86A338F9bD7D98339b59BA" 
+  shortName: "HarmonyProd",
+  longName: "Harmony Production",
+  address: "0xA7EA651082212d43cd86A338F9bD7D98339b59BA",
+  addHyperlink: "https://docs.harmony.one/home/general/wallets/browser-extensions-wallets/metamask-wallet/adding-harmony",
+  getCoinsHyperlink: "https://www.finder.com/how-to-buy-harmony"
 };
 
-
-const harmonyTestnetChain = 
+const harmonyTestnetChain : ChainInfo = 
 {
   connection: 
   {
@@ -31,11 +63,14 @@ const harmonyTestnetChain =
     rpcUrls: ['https://api.s0.b.hmny.io'],
     blockExplorerUrls: ['https://explorer.pops.one']
   },
-  name: "Harmony Testnet",
-  address: "0xE67d92E3fbd9Cb4BC90d58D768D199DB10BB0216" 
+  shortName: "HarmonyTest",
+  longName: "Harmony Testnet",
+  address: "0xE67d92E3fbd9Cb4BC90d58D768D199DB10BB0216",
+  addHyperlink: "https://docs.harmony.one/home/general/wallets/browser-extensions-wallets/metamask-wallet/adding-harmony",
+  getCoinsHyperlink: "https://faucet.pops.one/"
 };
 
-const localhost = 
+const localhost : ChainInfo = 
 {
   connection: 
   {
@@ -49,8 +84,42 @@ const localhost =
     rpcUrls: ['http://localhost:8545'],
     blockExplorerUrls: []
   },
-  name: "localhost:8545",
-  address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9"
+  shortName: "localhost",
+  longName: "localhost:8545",
+  address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+  addHyperlink: "http://localhost:3030",
+  getCoinsHyperlink: "http://localhost:3030"
 }
 
-export function targetChain(){ return localhost; }
+const environments = [localhost, harmonyTestnetChain, harmonyProductionChain]
+
+export function targetChain() : ChainInfo
+{ 
+  let envString = (process.env.REACT_APP_ZKWITCHES_ENVIRONMENT as string);
+  
+  console.log("Environment: ", JSON.stringify(process.env));
+
+  if (envString == undefined)
+  {
+    console.log("no environment defined, defaulting to localhost");
+    return localhost;
+  }
+
+  let matchingEnvironments = environments.filter(x => x.shortName == envString);
+  if (matchingEnvironments.length == 0)
+  {
+    console.log("Unrecognized environment ", envString);
+    console.log("defaulting to localhost");
+    return localhost;
+  } 
+  else if (matchingEnvironments.length >= 2)
+  {
+    console.log("Multiple environments match ", envString);
+    console.log("defaulting to localhost");
+    return localhost;
+  } 
+  else 
+  {
+    return matchingEnvironments[0];
+  }
+}

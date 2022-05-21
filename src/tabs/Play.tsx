@@ -2,10 +2,11 @@ import { useState } from "react";
 import Button from "@mui/material/Button";
 import Stack from '@mui/material/Stack';
 import TextField from "@mui/material/TextField";
-import { Checkbox, Divider, Typography} from "@mui/material";
+import { Checkbox, CircularProgress, Divider, Typography} from "@mui/material";
 import Slider from "@mui/material/Slider";
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Chip from '@mui/material/Chip';
+
 import { TotalGameState, PrivatePlayerInfo, GameStateEnum, DefaultTGS, DefaultPPI, IZKBackend, ActionInfo, Total, StartActionTGS, RespondToAccusationTGS, Empty, GetSlot } from "../zkWitchesTypes";
 import { ZKBackend, LoadingWidgetOutput, EventRepresentation } from "../zkWitchesEthers";
 import { IsEnabled, ShortDescription, type_string } from "../Descriptions";
@@ -497,15 +498,18 @@ function OtherTurnPlayer(props: OtherTurnPlayerProps)
     );
 }
 
-// LOADINGSCREEN
-
 type LoadingScreenProps = {
   description: string
 }
 
 function LoadingScreen(props: LoadingScreenProps) 
 {
-  return (<TextField label={props.description} variant="outlined" InputProps={{ readOnly: true,}} />); 
+  return (
+  <Stack direction="column"> 
+    <CircularProgress />
+    <Typography>{props.description}</Typography>
+  </Stack>
+  ); 
 }
 
 type DebugMenuProps = 

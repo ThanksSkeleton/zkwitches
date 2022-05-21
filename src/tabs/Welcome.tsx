@@ -2,6 +2,8 @@ import ReactMarkdown from 'react-markdown';
 import Button from "@mui/material/Button";
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
+
 import { TotalGameState, IZKBackend, GetSlot } from "../zkWitchesTypes";
 import { targetChain } from '../chainInfo';
 import banner from '../images/zkWitches.png';
@@ -33,15 +35,26 @@ export default function Welcome(props: WelcomeProps)
 
   let slot = GetSlot(tgs, props.backend.GetAddress());
 
-  let targetString = "Targeting the " + targetChain().name + " chain. Connect with a wallet to continue.";
+  let targetChainObject = targetChain();
+
+  let targetString = "ZKWitches is played on the " + targetChainObject.longName + " blockchain.";
+
+  let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
+  let howToGetCoints = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
+
+  let connectToContinue = "Connect with a wallet to continue.";
+
   let joinGameMessage = "zkWitches Lobbies: 0/1 full. A game is currently starting! Click on the 'Play' tab."
   let gameFullMessage = "zkWitches Lobbies: 1/1 active. All lobbies are currently full. You can spectate using the 'Play' tab."
 
   return (
     <Stack direction="column" spacing={4}>
       <img src={banner} width={723} height={288} alt='banner' />
-      <Typography>Welcome to zkWitches!</Typography> 
+      <Typography>Welcome to zkWitches!</Typography>
       <Typography>{targetString}</Typography>
+      <Stack direction="row"><Typography>{howToAdd}</Typography><Link href={targetChainObject.addHyperlink}>Link</Link></Stack>
+      <Stack direction="row"><Typography>{howToGetCoints}</Typography><Link href={targetChainObject.getCoinsHyperlink}>Link</Link></Stack>
+      { noDataPresent && <Typography>{connectToContinue}</Typography>}
       { noDataPresent && <NoData action={() => { props.backend.RefreshStatus();}} /> }
       { (!noDataPresent && (tgs as TotalGameState).shared.stateEnum == 0) && <Typography>{joinGameMessage}</Typography> }
       { (!noDataPresent && (tgs as TotalGameState).shared.stateEnum != 0) && <Typography>{gameFullMessage}</Typography> }
