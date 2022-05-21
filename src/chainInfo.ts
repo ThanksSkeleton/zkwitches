@@ -97,8 +97,6 @@ export function targetChain() : ChainInfo
 { 
   let envString = (process.env.REACT_APP_ZKWITCHES_ENVIRONMENT as string);
   
-  console.log("Environment: ", JSON.stringify(process.env));
-
   if (envString == undefined)
   {
     console.log("no environment defined, defaulting to localhost");
