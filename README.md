@@ -1,5 +1,11 @@
 # "The Witches of Zader-Klaus" - zkWitches
 
+Watch the video summary!
+
+https://www.youtube.com/watch?v=H34cf3wBk94
+
+Contact me at ChrisCallagan@proton.me
+
 ## Player's Summary of the Game
 This is a 4 player, turn based, secret information dapp card game with resource management and social deduction. The game is played on chain, and uses zk (zero knowledge) proofs to allow players to make validated moves without revealing their secrets.
 
