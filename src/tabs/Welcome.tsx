@@ -5,9 +5,18 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 
 import { TotalGameState, IZKBackend, GetSlot } from "../zkWitchesTypes";
-import { targetChain } from '../chainInfo';
 import banner from '../images/zkWitches.png';
 import { useState } from 'react';
+import {
+  useAccount,
+  useConnect,
+  useContract,
+  useContractRead,
+  useContractWrite,
+  useNetwork,
+  useWaitForTransaction,
+} from "wagmi";
+
 
 type WelcomeProps = 
 {
@@ -29,18 +38,15 @@ type WelcomeProps =
 
 export default function Welcome(props: WelcomeProps) 
 {
+  const chainName = useNetwork().chains[0].name;
+
   let tgs = props.backend.GetTotalGameState();
   let priv = undefined;
   let noDataPresent = tgs == undefined;
 
   let slot = GetSlot(tgs, props.backend.GetAddress());
 
-  let targetChainObject = targetChain();
 
-  let targetString = "This instance of ZKWitches is targeted to the " + targetChainObject.longName + " blockchain.";
-
-  let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
-  let howToGetCoints = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
 
   let connectToContinue = "Connect with a wallet to continue.";
 
@@ -51,9 +57,6 @@ export default function Welcome(props: WelcomeProps)
     <Stack direction="column" spacing={4}>
       <img src={banner} width={723} height={288} alt='banner' />
       <Typography>Welcome to zkWitches!</Typography>
-      <Typography>{targetString}</Typography>
-      <Stack direction="row"><Typography>{howToAdd}</Typography><Link href={targetChainObject.addHyperlink}>Link</Link></Stack>
-      <Stack direction="row"><Typography>{howToGetCoints}</Typography><Link href={targetChainObject.getCoinsHyperlink}>Link</Link></Stack>
       { noDataPresent && <Typography>{connectToContinue}</Typography>}
       { noDataPresent && <NoData action={() => { props.backend.RefreshStatus();}} /> }
       { (!noDataPresent && (tgs as TotalGameState).shared.stateEnum == 0) && <Typography>{joinGameMessage}</Typography> }
@@ -63,6 +66,29 @@ export default function Welcome(props: WelcomeProps)
   );
 }
 
+function ChainHelp() 
+{
+  const chainName = useNetwork().chains[0].name;
+
+  let targetString = "This instance of ZKWitches is targeted to the " + chainName + " blockchain.";
+
+  let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
+  let howToGetCoins = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
+
+  return(
+    <Stack>      
+      <Typography>{targetString}</Typography>
+      <Stack direction="row">
+        <Typography>{howToAdd}</Typography>
+        <Link href={"https://google.com/"}>Link</Link>
+      </Stack>
+      <Stack direction="row">
+        <Typography>{howToGetCoins}</Typography>
+        <Link href={"https://google.com/"}>Link</Link>
+      </Stack>
+    </Stack>
+  )
+}
 
 type NoDataProps = 
 {

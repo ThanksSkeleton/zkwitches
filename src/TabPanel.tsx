@@ -11,6 +11,7 @@ import { LoadingWidgetOutput, ZKBackend } from './zkWitchesEthers';
 import { ethers } from 'ethers';
 import Welcome from './tabs/Welcome';
 import { PrivMapper } from './PrivMapper';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -80,6 +81,7 @@ export default function BasicTabs() {
           <Tab label="Welcome" {...a11yProps(1)} />
           <Tab label="Play" {...a11yProps(2)} />
           <Tab label="About" {...a11yProps(3)} />
+          <ConnectButton/>
         </Tabs>
       </Box>
       <TabPanel value={value} index={1}>
