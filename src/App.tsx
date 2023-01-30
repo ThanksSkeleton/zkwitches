@@ -11,12 +11,12 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createClient, WagmiConfig } from 'wagmi';
-import { foundry, optimism, optimismGoerli } from 'wagmi/chains';
+import { localhost, optimism, optimismGoerli } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 
 
 const { chains, provider } = configureChains(
-    [optimism, optimismGoerli, foundry],
+    [optimism, optimismGoerli, localhost],
     [
       publicProvider()
     ]
