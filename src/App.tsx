@@ -1,10 +1,37 @@
 
 import BasicTabs from "./TabPanel";
-import WalletConnector from "./WalletConnector";
 import { createTheme, ThemeProvider, PaletteColorOptions } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import "@mui/material/styles/createPalette";
 
+import '@rainbow-me/rainbowkit/styles.css';
+
+import {
+  getDefaultWallets,
+  RainbowKitProvider,
+} from '@rainbow-me/rainbowkit';
+import { configureChains, createClient, WagmiConfig } from 'wagmi';
+import { localhost, optimism, optimismGoerli } from 'wagmi/chains';
+import { publicProvider } from 'wagmi/providers/public';
+
+
+const { chains, provider } = configureChains(
+    [optimism, optimismGoerli, localhost],
+    [
+      publicProvider()
+    ]
+  );
+  
+  const { connectors } = getDefaultWallets({
+    appName: 'zkWitches',
+    chains
+  });
+  
+  const wagmiClient = createClient({
+    autoConnect: true,
+    connectors,
+    provider
+  })
 
 const { palette } = createTheme();
 
@@ -76,14 +103,17 @@ declare module "@mui/material/styles/createPalette" {
         brigand: string;
         inquisitor: string;
     }
-  }
+}
 
 export default function App() {
     return (
-        <ThemeProvider theme={darkTheme}>
-            <CssBaseline />
-            <BasicTabs />
-            <WalletConnector />
-        </ThemeProvider>
+    <WagmiConfig client={wagmiClient}>
+        <RainbowKitProvider chains={chains}>
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline />
+                <BasicTabs />
+            </ThemeProvider>
+        </RainbowKitProvider>
+    </WagmiConfig>
     )
 }

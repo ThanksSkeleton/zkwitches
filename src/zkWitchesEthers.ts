@@ -2,7 +2,6 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 import zkWitchesAbi from './import/zkWitches.json';
 import accessAbi from "./Ownable.json"
 import { ActionEvent, VictoryLossEvent, ZkWitches } from './import/contracts/ZkWitches/ZkWitches' 
-import { targetChain } from "./chainInfo";
 
 import { ActionInfo, IZKBackend, PrivatePlayerInfo, ToJoinParameters, TotalGameState, ToValidMoveParameters, ToNoWitchParameters } from "./zkWitchesTypes";
 
@@ -10,6 +9,7 @@ import { generateCalldata } from './zkWitches_js/generate_calldata';
 import { Ownable } from "./Ownable";
 import { ACCUSATION_COLOR_WHITE, ACTION_COLORS, GAMESTART_COLOR_WHITE, JOIN_COLOR_WHITE, LongPastTenseDescription, LOSS_COLOR, VICTORY_COLOR } from "./Descriptions";
 import { PrivMapper } from "./PrivMapper";
+import { chain_address_map } from "./chain_map";
 
 let zkWitches: ZkWitches;
 let access : Ownable;
@@ -24,8 +24,11 @@ async function connectContract() {
     signerAddress = await signer.getAddress();
     console.log('signer: ', signerAddress);
 
-    zkWitches = new ethers.Contract(targetChain()['address'], zkWitchesAbi.abi, signer) as ZkWitches;
-    access = new ethers.Contract(targetChain()['address'], accessAbi.abi, signer) as Ownable;
+    let networkName : string = (await provider.getNetwork()).name
+    console.log('network: ', networkName);
+
+    zkWitches = new ethers.Contract(chain_address_map.get(networkName) ?? 'fail', zkWitchesAbi.abi, signer) as ZkWitches;
+    access = new ethers.Contract(chain_address_map.get(networkName) ?? 'fail', accessAbi.abi, signer) as Ownable;
 
     console.log("Loaded ZKWitches Contract:", zkWitches);
     console.log("Loaded Ownable Contract:", access);
