@@ -11,13 +11,13 @@ export default function About() {
 
   Inspiration by many social deduction games: Loveletter and Coup in particular.
 
-  Instruction by ZKU/zkDao
-
   Project Template: https://github.com/socathie/zkPhoto-ui by socathie
 
   Royalty Free Town Pixel Art and Pixel Art Citizens by ansimuz 
 
-  Royalty Free Witch Pixel Art by 9E0
+  Royalty Free Witch Pixel Art by 9E0  
+  
+  Special thanks to ZKDao for suggestions and help
   `;
 
   return (
