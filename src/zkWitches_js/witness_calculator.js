@@ -1,3 +1,5 @@
+/* global BigInt */
+
 module.exports = async function builder(code, options) {
 
     options = options || {};
