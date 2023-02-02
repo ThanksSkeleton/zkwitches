@@ -44,6 +44,8 @@ export default function Welcome(props: WelcomeProps)
 
   let slot = GetSlot(tgs, props.backend.GetAddress());
 
+  let welcomeDescription = "Welcome to ZKWitches! This is a ZK Game prototype that uses ZK Proofs to play a social deduction game on-chain. For detailed documentation, including how to play, check out " ;
+  let linkText = "https://github.com/ThanksSkeleton/zkwitches"
   let connectToContinue = "Connect with a wallet to continue.";
 
   let joinGameMessage = "zkWitches Lobbies: 0/1 full. A game is currently starting! Click on the 'Play' tab."
@@ -52,12 +54,16 @@ export default function Welcome(props: WelcomeProps)
   return (
     <Stack direction="column" spacing={4}>
       <img src={banner} width={723} height={288} alt='banner' />
-      <Typography>Welcome to zkWitches!</Typography>
+      <Typography>
+        {welcomeDescription} 
+        <Link href={linkText}>
+          the Github.
+        </Link>
+      </Typography>
       { noDataPresent && <Typography>{connectToContinue}</Typography>}
       { noDataPresent && <NoData action={() => { props.backend.RefreshStatus();}} /> }
       { (!noDataPresent && (tgs as TotalGameState).shared.stateEnum == 0) && <Typography>{joinGameMessage}</Typography> }
       { (!noDataPresent && (tgs as TotalGameState).shared.stateEnum != 0) && <Typography>{gameFullMessage}</Typography> }
-      <Documentation />
     </Stack>
   );
 }
@@ -98,60 +104,6 @@ function NoData(props: NoDataProps)
     onClick={props.action} >
     Fetch Data
     </Button>
-  );
-}
-
-function Documentation() 
-{
-  const md = `
-  ## Player's Summary of the Game
-  This is a 4 player, turn based, secret information dapp card game with resource management and social deduction. The game is played on chain, and uses zk (zero knowledge) proofs to allow players to make validated moves without revealing their secrets.
-  
-  The objective of the game is to become the most prosperous village by accumulating 10 food and 10 lumber. 
-  
-  At the start of the game, each player makes a secret selection of their village's citizens: a total of 7 citizens. 
-  
-  ## The Citizens
-  
-  Farmers:
-  
-  Gather Food. 0/1/2/3 farmers can gather 1/2/3/4 food 
-  
-  Lumberjacks:
-  
-  Gather Lumber. 0/1/2/3 lumberjacks can gather 1/2/3/4 lumber
-  
-  Brigands:
-  
-  Can force trades and steal Food or Lumber.
-  
-  0 : Trade 2 food for 1 lumber with another player.
-  
-  1 : Trade 2 lumber for 1 food with another player.
-  
-  2 : Steal 1 food
-  
-  3 : Steal 1 lumber 
-  
-  Inquisitors:
-  
-  Can eliminate the witches of other players.
-  
-  In an inquisition, the targeted village proves they do not have a specific witch. If they cannot, they pay 2 food, and 2 lumber to the inquisitor, and their witch flees forever. If they cannot pay the inquisitor's fee, the village is eliminated.
-  
-  0/1/2/3 inquisitors can launch a inquisition by spending 3/2/1/0 food and lumber.
-  
-  ## The Witches
-  
-  Witches perform actions like normal citizens, but they are 3 times as strong, so a witch can perform the action of 3 normal citizens.! But, they can be eliminated if you are targeted by Inquisitors, at a hefty cost.
-  
-  ## Game Over
-  
-  The game ends when 3 players have surrendered or have been eliminated, or a player accumulates 10 food and 10 lumber.
-  `;
-
-  return (
-    <ReactMarkdown children={md} />
   );
 }
 

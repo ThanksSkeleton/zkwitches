@@ -102,7 +102,9 @@ Deploying with mismatched zkey/verifier contracts will cause all proofs to fail.
 ## Circuits
 
 High Level Mermaid diagrams for the circuits are in ZKWitches/Docs (viewable via github or mermaid plugin)
+
 Ciruits + Test Artifacts + typescript types are in ZKWitches_Backend/circuits
+
 Scripts for generating outputs/exports from circuits are in ZKWitches_Backend/scripts
 
 ## Caveats + Known Problems
@@ -113,16 +115,18 @@ Fun/Complexity:
 * Not SUPER fun in current state. Gameplay needs a little 'fun juice'.
 * The game is an Anonymous Free for all - this means that player collusion is a real concern 
 * Adding an ability for a player to change their hand (similar to ambassador in 'Coup') would be awesome, and add a new level to the game.
+
 Playability:
 * Only one lobby!
 * No Lobby matchmaking system
 * UI is not pretty
 * UI COULD have the following but does not
-** Custom "Salt" input
-** Backup your salt+hand
-** Previous Moves by players
-** Victory/Loss Screen
-** Surrender/Kick 
+  * Custom "Salt" input
+  * Backup your salt+hand
+  * Previous Moves by players
+  * Victory/Loss Screen
+  * Surrender/Kick 
+
 Security:
 * Groth16 is "old" - maybe other systems are better?
 * Ceremony is has one local participant, not acceptable for a real product. More elaborate ceremony required
