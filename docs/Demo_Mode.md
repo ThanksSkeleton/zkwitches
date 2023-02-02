@@ -1,7 +1,5 @@
 # Demo Mode 
 
-The app is currently in 'demo mode' - it can show off some end to end ZK related actions but you cannot complete a full game. 
-
 What is working
 * Contract: Storage of the game state
 * Contract: Validating against most obviously incorrect actions (joining the same game twice, stealing from yourself)
@@ -10,20 +8,16 @@ What is working
 * Frontend: Painting UI based on fetched contract state 
 * Frontend: Disabling buttons for invalid actions
 
-What is not incomplete
-* Contract: Game State Machine Advancing (whose turn, resource counts)
-* Contract: Surrendering, Kicking
+What is not complete
 * Contract: Any money/payouts
-* Contract: Ending the Game or Starting a new game
 * Contract: Multiple lobbies/simultaneous games
 * Frontend: Representing all data required to make smart decisions
 * Frontend: Game log
-* Frontend: Persistance of private data after closing browser / refreshing page
 * FrontEnd: Generating random salt values or allowing custom salt input (only hardcoded)
 
 ## Demos
 
-Because the statemachine is incomplete, to help demo the game, I added an additional debug API that can arbitrarily set state. This is not just a frontend effect, it modifies the contract state on-chain. This allows you to show off the three different circuits/proofs.
+To help demo the game, I added an additional debug API that can arbitrarily set state. This is not just a frontend effect, it modifies the contract state on-chain. This allows you to show off the three different circuits/proofs.
 
 ### DEMO: JOIN
 
