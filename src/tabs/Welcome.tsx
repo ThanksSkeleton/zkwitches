@@ -38,15 +38,11 @@ type WelcomeProps =
 
 export default function Welcome(props: WelcomeProps) 
 {
-  const chainName = useNetwork().chains[0].name;
-
   let tgs = props.backend.GetTotalGameState();
   let priv = undefined;
   let noDataPresent = tgs == undefined;
 
   let slot = GetSlot(tgs, props.backend.GetAddress());
-
-
 
   let connectToContinue = "Connect with a wallet to continue.";
 
@@ -66,29 +62,29 @@ export default function Welcome(props: WelcomeProps)
   );
 }
 
-function ChainHelp() 
-{
-  const chainName = useNetwork().chains[0].name;
+// function ChainHelp() 
+// {
+//   //const chainName = useNetwork().chains[0].name;
 
-  let targetString = "This instance of ZKWitches is targeted to the " + chainName + " blockchain.";
+//   let targetString = "This instance of ZKWitches is targeted to the " + "Z" + " blockchain.";
 
-  let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
-  let howToGetCoins = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
+//   let howToAdd = "For instructions on adding this chain to your wallet, check here: ";
+//   let howToGetCoins = "You need currency to pay gas fees - for instructions on getting currency - check here: ";
 
-  return(
-    <Stack>      
-      <Typography>{targetString}</Typography>
-      <Stack direction="row">
-        <Typography>{howToAdd}</Typography>
-        <Link href={"https://google.com/"}>Link</Link>
-      </Stack>
-      <Stack direction="row">
-        <Typography>{howToGetCoins}</Typography>
-        <Link href={"https://google.com/"}>Link</Link>
-      </Stack>
-    </Stack>
-  )
-}
+//   return(
+//     <Stack>      
+//       <Typography>{targetString}</Typography>
+//       <Stack direction="row">
+//         <Typography>{howToAdd}</Typography>
+//         <Link href={"https://google.com/"}>Link</Link>
+//       </Stack>
+//       <Stack direction="row">
+//         <Typography>{howToGetCoins}</Typography>
+//         <Link href={"https://google.com/"}>Link</Link>
+//       </Stack>
+//     </Stack>
+//   )
+// }
 
 type NoDataProps = 
 {
