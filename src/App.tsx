@@ -14,9 +14,10 @@ import { configureChains, createClient, WagmiConfig } from 'wagmi';
 import { localhost, optimism, optimismGoerli } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 
+// TODO: Add optimism back
 
 const { chains, provider } = configureChains(
-    [optimism, optimismGoerli, localhost],
+    [optimismGoerli, localhost],
     [
       publicProvider()
     ]
