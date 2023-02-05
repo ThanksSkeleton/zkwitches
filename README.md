@@ -93,7 +93,7 @@ Currently a little rough around the edges...
 The ZKWitches repo contains the frontend and documentation for the entire project.
 The ZKWitches_backend includes the game smart contract, the circuits, and the tooling to generate the verifier contracts + zkeys
 
-The  ZKWitches_backend npm command 'test:fullProof' will run through everything, including running a 1 particpant ceremony and generating verifier contracts and tests. This will also generate WASM files, ZKeys, and typescript schemas for contract interaction in 'export', which need to be manually copied over to the ZKWitches repo.
+The ZKWitches_backend npm command 'test:fullProof' will run through everything, including running a 1 particpant ceremony and generating verifier contracts and tests. This will also generate WASM files, ZKeys, and typescript schemas for contract interaction in 'export', which need to be manually copied over to the ZKWitches repo.
 
 Deploying with mismatched zkey/verifier contracts will cause all proofs to fail. 
 
